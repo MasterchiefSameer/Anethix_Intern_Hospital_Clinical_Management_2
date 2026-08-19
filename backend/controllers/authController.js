@@ -1,25 +1,36 @@
 /**
- * This file contains the authentication logic for the application.
- * It includes registration, login, logout, and fetching user profile information.
+ * Authentication Controller.
+ * Handles user registration, login, and logout.
  */
 import User from '../models/User.js';
 import generateToken from '../utils/generateToken.js';
 
-// @desc    Auth user/set token
+// @desc    Auth user/set token & return user info
 // @route   POST /api/auth/login
 // @access  Public
 const loginUser = async (req, res, next) => {
+    const { email, password } = req.body;
     try {
-        const { email, password } = req.body;
-        const user = await User.findOne({ email });
-
-        if (user && (await user.matchPassword(password))) {
-            generateToken(res, user._id);
+        const validUser = await User.findOne({ email });
+        if (validUser && (await validUser.matchPassword(password))) {
+            const token = generateToken(res, validUser._id);
             res.status(200).json({
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
+                _id: validUser._id,
+                name: validUser.name,
+                email: validUser.email,
+                role: validUser.role,
+                phone: validUser.phone,
+                gender: validUser.gender,
+                dob: validUser.dob,
+                bloodGroup: validUser.bloodGroup,
+                address: validUser.address,
+                city: validUser.city,
+                state: validUser.state,
+                pincode: validUser.pincode,
+                languages: validUser.languages,
+                emergencyContact: validUser.emergencyContact,
+                createdAt: validUser.createdAt,
+                token: token,
             });
         } else {
             res.status(401);
@@ -49,16 +60,28 @@ const registerUser = async (req, res, next) => {
             password,
             phone,
             gender,
-            dob
+            dob,
         });
 
         if (user) {
-            generateToken(res, user._id);
+            const token = generateToken(res, user._id);
             res.status(201).json({
                 _id: user._id,
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                phone: user.phone,
+                gender: user.gender,
+                dob: user.dob,
+                bloodGroup: user.bloodGroup,
+                address: user.address,
+                city: user.city,
+                state: user.state,
+                pincode: user.pincode,
+                languages: user.languages,
+                emergencyContact: user.emergencyContact,
+                createdAt: user.createdAt,
+                token: token,
             });
         } else {
             res.status(400);
@@ -80,29 +103,8 @@ const logoutUser = (req, res) => {
     res.status(200).json({ message: 'User logged out' });
 };
 
-// @desc    Get user profile
-// @route   GET /api/auth/profile
-// @access  Private
-const getUserProfile = async (req, res, next) => {
-    try {
-        const user = {
-            _id: req.user._id,
-            name: req.user.name,
-            email: req.user.email,
-            role: req.user.role,
-            phone: req.user.phone,
-            gender: req.user.gender,
-            dob: req.user.dob,
-        };
-        res.status(200).json(user);
-    } catch (error) {
-        next(error);
-    }
-};
-
 export {
     loginUser,
     registerUser,
     logoutUser,
-    getUserProfile,
 };

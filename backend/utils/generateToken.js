@@ -1,6 +1,6 @@
 /**
- * This utility file contains a function to generate a JWT (JSON Web Token)
- * and set it as an HTTP-only cookie in the response. This is used for secure user authentication.
+ * Utility to generate a JWT and set it as an HTTP-only cookie in the response.
+ * Also returns the token string so it can be optionally used in Authorization headers.
  */
 import jwt from 'jsonwebtoken';
 
@@ -11,10 +11,12 @@ const generateToken = (res, userId) => {
 
     res.cookie('jwt', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV !== 'development', // Use secure cookies in production
-        sameSite: 'strict', // Prevent CSRF attacks
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax', // Compatible with localhost cross-port development
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
+
+    return token;
 };
 
 export default generateToken;

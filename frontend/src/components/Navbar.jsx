@@ -1,31 +1,218 @@
 /**
  * Navbar Component.
- * Displays the main navigation for the application. It includes links for Home, About, 
- * Departments, Doctors, and login/logout based on the user's authentication state.
+ * Displays top navigation bar with light/dark theme toggle, active links,
+ * and a profile hover/click dropdown menu.
  */
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+    Stethoscope,
+    User,
+    Sun,
+    Moon,
+    LogOut,
+    Calendar,
+    Settings,
+    Shield,
+    HeartPulse,
+    ChevronDown
+} from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 const Navbar = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const { user, logout } = useAuth();
+    const { theme, toggleTheme, isDark } = useTheme();
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+
+    const isActive = (path) => location.pathname === path;
+
+    const handleLogout = () => {
+        logout();
+        setDropdownOpen(false);
+        navigate('/login');
+    };
+
     return (
-        <nav className="bg-primary text-primary-foreground shadow-md sticky top-0 z-50">
-            <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-                <Link to="/" className="text-2xl font-bold tracking-tight">
-                    CareClinic
+        <header className="bg-white dark:bg-slate-900 sticky top-0 z-50 shadow-sm border-b border-slate-100 dark:border-slate-800 transition-colors duration-200">
+            <div className="flex justify-between items-center h-16 px-6 max-w-7xl mx-auto">
+                {/* Brand Logo */}
+                <Link to="/" className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-[#00478d] dark:bg-blue-600 flex items-center justify-center text-white shadow-sm">
+                        <Stethoscope size={20} />
+                    </div>
+                    <span className="text-xl font-bold text-[#00478d] dark:text-blue-400 tracking-tight">
+                        MedTrust Portal
+                    </span>
                 </Link>
-                <div className="hidden md:flex space-x-6">
-                    <Link to="/" className="hover:text-accent transition-colors">Home</Link>
-                    <Link to="/about" className="hover:text-accent transition-colors">About</Link>
-                    <Link to="/departments" className="hover:text-accent transition-colors">Departments</Link>
-                    <Link to="/doctors" className="hover:text-accent transition-colors">Doctors</Link>
-                    <Link to="/contact" className="hover:text-accent transition-colors">Contact</Link>
-                </div>
-                <div className="flex space-x-4">
-                    <Link to="/login" className="bg-background text-foreground px-4 py-2 rounded-md font-medium hover:bg-accent hover:text-accent-foreground transition-all">
-                        Login
+
+                {/* Navigation Links */}
+                <nav className="hidden md:flex items-center gap-8">
+                    <Link
+                        to="/"
+                        className={`text-sm font-medium transition-colors ${
+                            isActive('/')
+                                ? 'text-[#00478d] dark:text-blue-400 border-b-2 border-[#00478d] dark:border-blue-400 pb-1 font-semibold'
+                                : 'text-slate-600 dark:text-slate-300 hover:text-[#00478d] dark:hover:text-blue-400'
+                        }`}
+                    >
+                        Home
                     </Link>
+                    <Link
+                        to="/about"
+                        className={`text-sm font-medium transition-colors ${
+                            isActive('/about')
+                                ? 'text-[#00478d] dark:text-blue-400 border-b-2 border-[#00478d] dark:border-blue-400 pb-1 font-semibold'
+                                : 'text-slate-600 dark:text-slate-300 hover:text-[#00478d] dark:hover:text-blue-400'
+                        }`}
+                    >
+                        About Us
+                    </Link>
+                    <Link
+                        to="/doctors"
+                        className={`text-sm font-medium transition-colors ${
+                            isActive('/doctors')
+                                ? 'text-[#00478d] dark:text-blue-400 border-b-2 border-[#00478d] dark:border-blue-400 pb-1 font-semibold'
+                                : 'text-slate-600 dark:text-slate-300 hover:text-[#00478d] dark:hover:text-blue-400'
+                        }`}
+                    >
+                        Doctors
+                    </Link>
+                    <Link
+                        to="/contact"
+                        className={`text-sm font-medium transition-colors ${
+                            isActive('/contact')
+                                ? 'text-[#00478d] dark:text-blue-400 border-b-2 border-[#00478d] dark:border-blue-400 pb-1 font-semibold'
+                                : 'text-slate-600 dark:text-slate-300 hover:text-[#00478d] dark:hover:text-blue-400'
+                        }`}
+                    >
+                        Contact
+                    </Link>
+                </nav>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-3">
+                    {/* Dark/Light Theme Toggle */}
+                    <button
+                        onClick={toggleTheme}
+                        aria-label="Toggle Dark/Light Mode"
+                        title={isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+                        className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 flex items-center justify-center"
+                    >
+                        {isDark ? (
+                            <Sun size={18} className="text-amber-400" />
+                        ) : (
+                            <Moon size={18} className="text-slate-700" />
+                        )}
+                    </button>
+
+                    <Link
+                        to="/doctors"
+                        className="hidden sm:inline-flex items-center justify-center bg-[#00478d] dark:bg-blue-600 text-white hover:bg-[#003870] dark:hover:bg-blue-700 transition-colors text-sm font-medium px-5 py-2 rounded-lg shadow-sm"
+                    >
+                        Book Appointment
+                    </Link>
+
+                    {/* Profile Section with Hover & Click Dropdown */}
+                    {user ? (
+                        <div className="relative group">
+                            {/* Avatar Trigger Button */}
+                            <button
+                                onClick={() => setDropdownOpen(!dropdownOpen)}
+                                className="flex items-center gap-2 p-1 rounded-full border border-slate-200 dark:border-slate-700 hover:border-[#00478d] dark:hover:border-blue-400 transition-all focus:outline-none"
+                            >
+                                <div className="w-8 h-8 rounded-full bg-[#00478d] dark:bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                                    {user.name ? user.name.charAt(0).toUpperCase() : 'P'}
+                                </div>
+                            </button>
+
+                            {/* Dropdown Menu (Opens on hover or click) */}
+                            <div
+                                className={`absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 py-3 z-50 transition-all duration-200 ${
+                                    dropdownOpen
+                                        ? 'opacity-100 visible translate-y-0'
+                                        : 'opacity-0 invisible -translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0'
+                                }`}
+                            >
+                                {/* User Info Header */}
+                                <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                                            {user.name || 'Patient User'}
+                                        </p>
+                                        {user.bloodGroup && (
+                                            <span className="text-[10px] bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 font-extrabold px-1.5 py-0.5 rounded">
+                                                {user.bloodGroup}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                        {user.email}
+                                    </p>
+                                    <span className="inline-block mt-1.5 text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-[#00478d] dark:text-blue-400 border border-blue-100 dark:border-blue-900">
+                                        {user.role || 'Patient'}
+                                    </span>
+                                </div>
+
+                                {/* Menu Links */}
+                                <div className="py-2 space-y-0.5">
+                                    <Link
+                                        to="/profile"
+                                        onClick={() => setDropdownOpen(false)}
+                                        className="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#00478d] dark:hover:text-blue-400 transition-colors"
+                                    >
+                                        <User size={16} className="text-[#00478d] dark:text-blue-400" />
+                                        <span>My Medical Profile</span>
+                                    </Link>
+
+                                    <Link
+                                        to="/dashboard"
+                                        onClick={() => setDropdownOpen(false)}
+                                        className="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#00478d] dark:hover:text-blue-400 transition-colors"
+                                    >
+                                        <Calendar size={16} className="text-[#006a63] dark:text-emerald-400" />
+                                        <span>My Appointments</span>
+                                    </Link>
+
+                                    {user.role === 'Super Admin' && (
+                                        <Link
+                                            to="/admin"
+                                            onClick={() => setDropdownOpen(false)}
+                                            className="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#00478d] dark:hover:text-blue-400 transition-colors"
+                                        >
+                                            <Shield size={16} className="text-purple-500" />
+                                            <span>Admin Console</span>
+                                        </Link>
+                                    )}
+                                </div>
+
+                                {/* Sign Out Option */}
+                                <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                                    <button
+                                        type="button"
+                                        onClick={handleLogout}
+                                        className="w-full flex items-center gap-3 px-4 py-2 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
+                                    >
+                                        <LogOut size={16} />
+                                        <span>Sign Out</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <Link
+                            to="/login"
+                            className="flex items-center justify-center w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors border border-slate-200 dark:border-slate-700"
+                            title="Login"
+                        >
+                            <User size={18} />
+                        </Link>
+                    )}
                 </div>
             </div>
-        </nav>
+        </header>
     );
 };
 

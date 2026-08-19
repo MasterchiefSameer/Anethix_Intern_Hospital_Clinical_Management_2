@@ -34,7 +34,36 @@ const userSchema = new mongoose.Schema({
     },
     dob: {
         type: Date,
-    }
+    },
+    bloodGroup: {
+        type: String,
+        enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', ''],
+        default: '',
+    },
+    address: {
+        type: String,
+        default: '',
+    },
+    city: {
+        type: String,
+        default: '',
+    },
+    state: {
+        type: String,
+        default: '',
+    },
+    pincode: {
+        type: String,
+        default: '',
+    },
+    languages: {
+        type: String,
+        default: 'Hindi, English',
+    },
+    emergencyContact: {
+        type: String,
+        default: '',
+    },
 }, { timestamps: true });
 
 // Match user entered password to hashed password in database

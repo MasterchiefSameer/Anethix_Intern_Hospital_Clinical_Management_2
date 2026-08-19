@@ -32,6 +32,7 @@ app.get('/', (req, res) => {
 
 // Import Routes (To be created)
 import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 import doctorRoutes from './routes/doctorRoutes.js';
 import appointmentRoutes from './routes/appointmentRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
@@ -39,6 +40,7 @@ import paymentRoutes from './routes/paymentRoutes.js';
 
 // Mount Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/user',userRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/messages', messageRoutes);

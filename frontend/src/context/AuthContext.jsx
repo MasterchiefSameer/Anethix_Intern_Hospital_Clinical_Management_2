@@ -1,41 +1,44 @@
 /**
  * Authentication Context Provider.
- * This file manages global user state. It provides functionality to login, logout,
- * and check the current user's profile across the entire application using React Context.
+ * Manages global user state with localStorage persistence for sessions,
+ * login, registration, and logout handling.
  */
-import { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-
-    // TODO: Implement actual API calls to fetch user profile, login, and logout.
-
-    useEffect(() => {
-        // Mock authentication check for now
-        const checkAuth = async () => {
-            setLoading(false);
-        };
-        checkAuth();
-    }, []);
+    const [user, setUser] = useState(() => {
+        try {
+            const savedUser = localStorage.getItem('medtrust_user');
+            return savedUser ? JSON.parse(savedUser) : null;
+        } catch {
+            return null;
+        }
+    });
+    const [loading, setLoading] = useState(false);
 
     const login = (userData) => {
         setUser(userData);
+        localStorage.setItem('medtrust_user', JSON.stringify(userData));
     };
 
     const logout = () => {
         setUser(null);
+        localStorage.removeItem('medtrust_user');
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, loading }}>
-            {!loading && children}
+        <AuthContext.Provider value={{ user, login, logout, loading, setLoading }}>
+            {children}
         </AuthContext.Provider>
     );
 };
 
 export const useAuth = () => {
-    return useContext(AuthContext);
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
 };
