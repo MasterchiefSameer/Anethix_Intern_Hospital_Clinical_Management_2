@@ -17,6 +17,7 @@ import {
     CalendarCheck,
     Map as MapIcon
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Contact = () => {
     const [formData, setFormData] = useState({
@@ -36,7 +37,16 @@ const Contact = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        if (!formData.name || !formData.phone || !formData.message) {
+            toast.error('Incomplete form', {
+                description: 'Please fill in all mandatory fields (Name, Phone, Message).',
+            });
+            return;
+        }
         setSubmitted(true);
+        toast.success('Inquiry Submitted Successfully', {
+            description: 'Our patient care desk will call you back within 15 minutes.',
+        });
     };
 
     return (

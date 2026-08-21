@@ -6,11 +6,14 @@
 import React, { useState } from 'react';
 import { User, Mail, Phone, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 
 const Register = ({ onError, onSuccess }) => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const fromPath = location.state?.from?.pathname || '/dashboard';
     const { login } = useAuth();
 
     const [registerData, setRegisterData] = useState({
@@ -33,6 +36,14 @@ const Register = ({ onError, onSuccess }) => {
         e.preventDefault();
         setLoading(true);
         if (onError) onError('');
+
+        if (registerData.password.length < 6) {
+            toast.error('Password too short', {
+                description: 'Password must be at least 6 characters long.',
+            });
+            setLoading(false);
+            return;
+        }
 
         // =========================================================================
         // NOTE: This is for local storage (test / deployment purpose)
@@ -85,9 +96,12 @@ const Register = ({ onError, onSuccess }) => {
             login(data);
             saveToLocalStorage(data);
 
+            toast.success(`Welcome to MedTrust, ${data.name}!`, {
+                description: 'Your patient account has been created successfully.',
+            });
             if (onSuccess) onSuccess('Account created successfully! Redirecting...');
             setTimeout(() => {
-                navigate('/dashboard');
+                navigate(fromPath, { replace: true });
             }, 1000);
         } catch (err) {
             // =========================================================================
@@ -110,15 +124,13 @@ const Register = ({ onError, onSuccess }) => {
             saveToLocalStorage(localUser);
             login(localUser);
 
+            toast.success(`Welcome to MedTrust, ${localUser.name}!`, {
+                description: 'Account created (Local Storage Mode). Redirecting...',
+            });
             if (onSuccess) onSuccess('Account created successfully (Local Storage Mode)! Redirecting...');
             setTimeout(() => {
-                navigate('/dashboard');
+                navigate(fromPath, { replace: true });
             }, 1000);
-
-            // // Production mein seedha Backend ka actual error aayega (e.g., "User already exists")
-            // const msg = err.response?.data?.message || 'Registration failed. Please try again.';
-            // if (onError) onError(msg);
-            
         } finally {
             setLoading(false);
         }

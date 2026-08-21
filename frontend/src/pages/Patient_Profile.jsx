@@ -1,9 +1,9 @@
 /**
  * Patient Profile Page Component.
  * Displays patient details, Registration Date, Blood Group, Address,
- * Languages, and Emergency Contact with full edit and save functionality.
+ * Languages, and Emergency Contact with full edit and save functionality connected to MongoDB.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     User,
     Mail,
@@ -19,9 +19,12 @@ import {
     AlertCircle,
     Activity,
     Clock,
-    PhoneCall
+    PhoneCall,
+    LayoutDashboard,
+    RefreshCw
 } from 'lucide-react';
 import axios from 'axios';
+import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -31,6 +34,7 @@ const PatientProfile = () => {
 
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [fetching, setFetching] = useState(true);
     const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
 
     // Profile form state
@@ -49,67 +53,83 @@ const PatientProfile = () => {
         emergencyContact: '',
         createdAt: '',
     });
-    console.log(profile);
 
-    // Populate profile from current user or fetch from backend API
-    useEffect(() => {
-        const fetchUserProfile = async () => {
-            if (!user?._id) return;
-            try {
-                const token = user?.token;
-                const config = {
-                    withCredentials: true,
-                    headers: token ? { Authorization: `Bearer ${token}` } : {},
-                };
+    // Fetch patient profile from MongoDB API
+    const fetchUserProfile = useCallback(async () => {
+        if (!user) return;
+        setFetching(true);
+        try {
+            const token = user?.token || user?.rest?.token;
+            const targetId = user?._id || user?.rest?._id;
 
-                const { data } = await axios.get(
-                    `http://localhost:5000/api/user/profile/${user._id}`,
-                    config
-                );
-                if (data) {
-                    setProfile({
-                        name: data.name || '',
-                        email: data.email || '',
-                        phone: data.phone || '',
-                        gender: data.gender || 'Male',
-                        dob: data.dob ? data.dob.split('T')[0] : '',
-                        bloodGroup: data.bloodGroup || '',
-                        address: data.address || '',
-                        city: data.city || '',
-                        state: data.state || '',
-                        pincode: data.pincode || '',
-                        languages: data.languages || 'Hindi, English',
-                        emergencyContact: data.emergencyContact || '',
-                        createdAt: data.createdAt || new Date().toISOString(),
-                    });
-                }
-            } catch (err) {
-                console.warn('Could not fetch latest profile from backend, using local state:', err);
-                // Fallback to AuthContext / localStorage user
-                if (user) {
-                    setProfile({
-                        name: user.name || '',
-                        email: user.email || '',
-                        phone: user.phone || '',
-                        gender: user.gender || 'Male',
-                        dob: user.dob ? user.dob.split('T')[0] : '',
-                        bloodGroup: user.bloodGroup || '',
-                        address: user.address || '',
-                        city: user.city || '',
-                        state: user.state || '',
-                        pincode: user.pincode || '',
-                        languages: user.languages || 'Hindi, English',
-                        emergencyContact: user.emergencyContact || '',
-                        createdAt: user.createdAt || new Date().toISOString(),
-                    });
-                }
+            const config = {
+                withCredentials: true,
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
+            };
+
+            // Call /api/user/profile/:id (or /api/user/profile)
+            const endpoint = targetId
+                ? `http://localhost:5000/api/user/profile/${targetId}`
+                : 'http://localhost:5000/api/user/profile';
+
+            const { data } = await axios.get(endpoint, config);
+
+            if (data) {
+                setProfile({
+                    name: data.name || user.name || '',
+                    email: data.email || user.email || '',
+                    phone: data.phone || user.phone || '',
+                    gender: data.gender || user.gender || 'Male',
+                    dob: data.dob ? data.dob.split('T')[0] : (user.dob ? user.dob.split('T')[0] : ''),
+                    bloodGroup: data.bloodGroup || user.bloodGroup || '',
+                    address: data.address || user.address || '',
+                    city: data.city || user.city || '',
+                    state: data.state || user.state || '',
+                    pincode: data.pincode || user.pincode || '',
+                    languages: data.languages || user.languages || 'Hindi, English',
+                    emergencyContact: data.emergencyContact || user.emergencyContact || '',
+                    createdAt: data.createdAt || user.createdAt || new Date().toISOString(),
+                });
             }
-        };
+        } catch (err) {
+            console.warn('Could not fetch live profile from database, loading local state:', err);
+            // Fallback to AuthContext user
+            if (user) {
+                setProfile({
+                    name: user.name || user.rest?.name || '',
+                    email: user.email || user.rest?.email || '',
+                    phone: user.phone || user.rest?.phone || '',
+                    gender: user.gender || user.rest?.gender || 'Male',
+                    dob: user.dob ? user.dob.split('T')[0] : '',
+                    bloodGroup: user.bloodGroup || user.rest?.bloodGroup || '',
+                    address: user.address || user.rest?.address || '',
+                    city: user.city || user.rest?.city || '',
+                    state: user.state || user.rest?.state || '',
+                    pincode: user.pincode || user.rest?.pincode || '',
+                    languages: user.languages || user.rest?.languages || 'Hindi, English',
+                    emergencyContact: user.emergencyContact || user.rest?.emergencyContact || '',
+                    createdAt: user.createdAt || user.rest?.createdAt || new Date().toISOString(),
+                });
+            }
+        } finally {
+            setFetching(false);
+        }
+    }, [user]);
 
+    useEffect(() => {
         if (user) {
             fetchUserProfile();
         }
-    }, [user]);
+    }, [fetchUserProfile, user]);
+
+    // Automatically clear status message notification banner after 3 seconds
+    useEffect(() => {
+        if (!statusMessage.text) return;
+        const timer = setTimeout(() => {
+            setStatusMessage({ type: '', text: '' });
+        }, 3000);
+        return () => clearTimeout(timer);
+    }, [statusMessage]);
 
     const handleChange = (e) => {
         setProfile({ ...profile, [e.target.name]: e.target.value });
@@ -122,19 +142,20 @@ const PatientProfile = () => {
         setStatusMessage({ type: '', text: '' });
 
         try {
-            const targetId = user?._id || '';
-            const token = user?.token;
+            const token = user?.token || user?.rest?.token;
+            const targetId = user?._id || user?.rest?._id;
+
             const config = {
                 withCredentials: true,
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
             };
 
+            const endpoint = targetId
+                ? `http://localhost:5000/api/user/profile/${targetId}`
+                : 'http://localhost:5000/api/user/profile';
+
             // 1. Send update request to Backend API (Saves directly to MongoDB Database)
-            const { data } = await axios.put(
-                `http://localhost:5000/api/user/profile/${targetId}`,
-                profile,
-                config
-            );
+            const { data } = await axios.put(endpoint, profile, config);
 
             // Update AuthContext session & localStorage
             const mergedUser = { ...user, ...data, token: token || data.token };
@@ -142,6 +163,9 @@ const PatientProfile = () => {
             window.localStorage.setItem('medtrust_user', JSON.stringify(mergedUser));
 
             setIsEditing(false);
+            toast.success('Profile Saved to Database', {
+                description: 'Your medical records have been updated successfully in MongoDB.',
+            });
             setStatusMessage({
                 type: 'success',
                 text: '✓ Profile updated and saved to MongoDB database successfully!',
@@ -150,6 +174,9 @@ const PatientProfile = () => {
             console.error('Profile update error:', err);
             const errorMsg =
                 err.response?.data?.message || err.message || 'Failed to update profile on database';
+            toast.error('Update Failed', {
+                description: errorMsg,
+            });
             setStatusMessage({
                 type: 'error',
                 text: `Database Update Failed: ${errorMsg}`,
@@ -207,7 +234,7 @@ const PatientProfile = () => {
                                 {profile.name ? profile.name.charAt(0).toUpperCase() : 'P'}
                             </div>
                             {profile.bloodGroup && (
-                                <span className="absolute -bottom-2 -right-2 bg-green-600 dark:white text-white text-xs font-extrabold px-2 py-0.5 rounded-lg shadow-md border-2 border-white dark:border-slate-900">
+                                <span className="absolute -bottom-2 -right-2 bg-green-600 text-white text-xs font-extrabold px-2 py-0.5 rounded-lg shadow-md border-2 border-white dark:border-slate-900">
                                     {profile.bloodGroup}
                                 </span>
                             )}
@@ -234,10 +261,20 @@ const PatientProfile = () => {
                         </div>
                     </div>
 
-                    {/* Action Toggle Button */}
-                    <div>
+                    {/* Action Toggle Button & Dashboard Shortcut */}
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                        <button
+                            type="button"
+                            onClick={fetchUserProfile}
+                            disabled={fetching}
+                            className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
+                            title="Refresh from Database"
+                        >
+                            <RefreshCw size={15} className={fetching ? 'animate-spin' : ''} />
+                        </button>
+
                         {isEditing ? (
-                            <div className="flex items-center gap-3">
+                            <>
                                 <button
                                     type="button"
                                     onClick={() => setIsEditing(false)}
@@ -254,16 +291,26 @@ const PatientProfile = () => {
                                     <Save size={15} />
                                     <span>{loading ? 'Saving...' : 'Save Changes'}</span>
                                 </button>
-                            </div>
+                            </>
                         ) : (
-                            <button
-                                type="button"
-                                onClick={() => setIsEditing(true)}
-                                className="inline-flex items-center gap-2 bg-[#00478d] dark:bg-blue-600 hover:bg-[#003870] dark:hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-semibold shadow-sm hover:shadow transition-all"
-                            >
-                                <Edit3 size={15} />
-                                <span>Edit Profile</span>
-                            </button>
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={() => navigate('/dashboard')}
+                                    className="inline-flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-sm transition-all"
+                                >
+                                    <LayoutDashboard size={15} className="text-[#00478d] dark:text-blue-400" />
+                                    <span>My Dashboard</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditing(true)}
+                                    className="inline-flex items-center gap-2 bg-[#00478d] dark:bg-blue-600 hover:bg-[#003870] dark:hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-semibold shadow-sm hover:shadow transition-all"
+                                >
+                                    <Edit3 size={15} />
+                                    <span>Edit Profile</span>
+                                </button>
+                            </>
                         )}
                     </div>
                 </div>
@@ -319,7 +366,7 @@ const PatientProfile = () => {
                                         <option value="O-">O- (O Negative)</option>
                                     </select>
                                 ) : (
-                                    <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700 text-sm font-bold text-green-600 dark:text-red-400 flex items-center justify-between">
+                                    <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700 text-sm font-bold text-green-600 dark:text-emerald-400 flex items-center justify-between">
                                         <span>{profile.bloodGroup || 'Not specified yet'}</span>
                                         <span className="text-xs text-slate-400 font-normal">
                                             {profile.bloodGroup ? 'Recorded' : 'Click Edit to Add'}

@@ -30,6 +30,16 @@ const Auth = ({ initialMode = 'login' }) => {
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
 
+    // Auto-clear feedback messages after 4 seconds
+    useEffect(() => {
+        if (!error && !successMessage) return;
+        const timer = setTimeout(() => {
+            setError('');
+            setSuccessMessage('');
+        }, 4000);
+        return () => clearTimeout(timer);
+    }, [error, successMessage]);
+
     const isRegister = mode === 'register';
 
     return (
@@ -179,8 +189,18 @@ const Auth = ({ initialMode = 'login' }) => {
                         </div>
                     </div>
 
+                    {/* Staff Portal Portal Link */}
+                    <div className="mt-5 p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/60 dark:border-slate-700/60 text-center">
+                        <p className="text-xs text-slate-600 dark:text-slate-300">
+                            Hospital Doctor or Staff Member?{' '}
+                            <Link to="/staff/login" className="text-[#00478d] dark:text-blue-400 font-bold hover:underline">
+                                Staff Portal Login →
+                            </Link>
+                        </p>
+                    </div>
+
                     {/* Bottom Legal Notice */}
-                    <div className="mt-6 text-center">
+                    <div className="mt-4 text-center">
                         <p className="text-[11px] text-slate-400 dark:text-slate-500">
                             By continuing, you agree to MedTrust's{' '}
                             <Link to="/terms" className="text-[#00478d] dark:text-blue-400 hover:underline">

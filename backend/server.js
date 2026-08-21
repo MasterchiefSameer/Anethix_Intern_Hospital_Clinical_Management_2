@@ -37,14 +37,16 @@ import doctorRoutes from './routes/doctorRoutes.js';
 import appointmentRoutes from './routes/appointmentRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 // Mount Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/user',userRoutes);
+app.use('/api/user', userRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error Middleware (To be created)
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';

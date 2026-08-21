@@ -31,6 +31,9 @@ const Footer = () => {
                     <Link to="/doctors" className="text-sm text-slate-600 dark:text-slate-300 hover:text-[#00478d] dark:hover:text-blue-400 transition-colors">
                         Specialists
                     </Link>
+                    <Link to="/staff/login" className="text-sm font-semibold text-[#00478d] dark:text-blue-400 hover:underline transition-colors">
+                        Staff Portal
+                    </Link>
                     <Link to="/privacy" className="text-sm text-slate-600 dark:text-slate-300 hover:text-[#00478d] dark:hover:text-blue-400 transition-colors">
                         Privacy Policy
                     </Link>

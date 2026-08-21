@@ -13,7 +13,7 @@ const generateToken = (res, userId) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax', // Compatible with localhost cross-port development
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     return token;

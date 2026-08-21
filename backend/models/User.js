@@ -22,8 +22,16 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['Patient', 'Receptionist', 'Super Admin'],
+        enum: ['Patient', 'Receptionist', 'Doctor', 'Super Admin'],
         default: 'Patient'
+    },
+    isFirstLogin: {
+        type: Boolean,
+        default: false,
+    },
+    isActive: {
+        type: Boolean,
+        default: true,
     },
     phone: {
         type: String,
@@ -63,6 +71,18 @@ const userSchema = new mongoose.Schema({
     emergencyContact: {
         type: String,
         default: '',
+    },
+    employeeId: {
+        type: String,
+        default: '',
+    },
+    deskNumber: {
+        type: String,
+        default: 'Front Desk #1',
+    },
+    shiftTimings: {
+        type: String,
+        default: 'Morning Shift (08:00 AM - 04:00 PM)',
     },
 }, { timestamps: true });
 

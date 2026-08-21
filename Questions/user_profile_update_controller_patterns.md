@@ -255,13 +255,80 @@ export const updateUserProfile = async (req, res, next) => {
 
 ---
 
-## 5. Software Engineer Takeaway Summary (Quick Notes)
+## 6. Why is `bcrypt` imported in `UserController.js` if `User.js` already has it?
+
+> **The Question**: *"In `backend/models/User.js`, we already have `userSchema.pre('save', ...)` which hashes passwords automatically. Why do we need to import `bcrypt` and write `bcrypt.hashSync()` again in `UserController.js`?"*
+
+### The Core Reason: `pre('save')` Middleware Hook Bypass
+
+In `backend/models/User.js` (Lines 69–82), we have both the custom method and the pre-save hook:
+
+```javascript
+// ==========================================
+// REFERENCE CODE: backend/models/User.js (Lines 69-82)
+// ==========================================
+
+// 1. Custom method for checking password during login
+userSchema.methods.matchPassword = async function (enteredPassword) {
+    return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// 2. Pre-save hook for encrypting password during user.save() / User.create()
+userSchema.pre('save', async function (next) {
+    if (!this.isModified('password')) {
+        next();
+    }
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+});
+```
+
+- **Mongoose Rule**: `pre('save')` **ONLY** triggers when you call document-level methods like `newUser.save()` or `user.save()`.
+- When updating via `User.findByIdAndUpdate()`, it sends a direct update command to the MongoDB database engine. **Mongoose skips and bypasses the `pre('save')` hook completely!**
+
+### What Happens Without Manual Hashing in Controller?
+
+```
+User submits new password: "newSecretPassword123"
+                  │
+                  ▼
+User.findByIdAndUpdate(..., { $set: { password: "newSecretPassword123" } })
+                  │
+                  ▼ (pre('save') is BYPASSED!)
+MongoDB stores: "newSecretPassword123" in PLAIN TEXT 🚨 (CRITICAL SECURITY BUG)
+                  │
+                  ▼
+Next Login: matchPassword() fails because DB has plain text, not a bcrypt hash!
+```
+
+### The Solution:
+
+To ensure passwords are always encrypted before reaching MongoDB during an update query:
+```javascript
+// backend/controllers/UserController.js
+if (req.body.password) {
+    updateData.password = bcrypt.hashSync(req.body.password, 10);
+}
+```
+
+### Comparison Matrix:
+
+| Operation | Does `pre('save')` run? | Is Password Auto-Hashed by `User.js`? | Where is Hashing Handled? |
+| :--- | :--- | :--- | :--- |
+| `User.create()` (Registration) | ✅ **Yes** | ✅ **Yes** | Automatically by `User.js` hook |
+| `user.save()` (Save Method) | ✅ **Yes** | ✅ **Yes** | Automatically by `User.js` hook |
+| `User.findByIdAndUpdate()` (Profile Update) | ❌ **No (Bypassed)** | ❌ **No** | Explicitly by `UserController.js` using `bcrypt.hashSync()` |
+
+---
+
+## 7. Software Engineer Takeaway Summary (Quick Notes)
 
 1. **`findByIdAndUpdate` is atomic**: It runs directly in the MongoDB engine in a single round-trip.
 2. **`pre('save')` hooks don't run on `findByIdAndUpdate`**: That's why you hash passwords explicitly with `bcrypt.hashSync()`.
-3. **Whitelist fields**: Never pass `req.body` directly to MongoDB update; only extract `allowedFields`.
+3. **Whitelist fields**: Never pass `req.body` directly to MongoDB update; only extract `allowedFields` (Mass Assignment Protection).
 4. **`_doc` Destructuring**: `const { password, ...rest } = updatedUser._doc` is the cleanest, most modern way in JavaScript to omit sensitive keys before sending the response to the frontend.
 
 ---
 *Document created and finalized for MedTrust Healthcare Management System reference.*
+
 

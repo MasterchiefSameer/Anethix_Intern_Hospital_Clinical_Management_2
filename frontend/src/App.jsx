@@ -15,42 +15,94 @@ import Contact from './pages/Contact';
 import Footer from './components/Footer';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import CustomToaster from './components/CustomToaster';
+import Departments from './pages/Departments';
+import StaffLogin from './pages/admin/StaffLogin';
+import DoctorProfile from './pages/admin/Staff/Doctor_profile';
+import ReceptionistProfile from './pages/admin/Staff/Receptionist_profile';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <Router>
-          <div className="min-h-screen bg-[#f7f9fb] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased flex flex-col transition-colors duration-200">
-          <Navbar />
-          <main className="flex-grow">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/login" element={<Auth initialMode="login" />} />
-              <Route path="/register" element={<Auth initialMode="register" />} />
-              <Route path="/doctors" element={<DoctorDirectory />} />
-              <Route path="/book/:doctorId" element={<BookAppointment />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/profile" element={<PatientProfile />} />
-              <Route path="/patient-profile" element={<PatientProfile />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
+    <>
+      <ThemeProvider>
+        {/* Auth Provider */}
+        <AuthProvider>
+          <CustomToaster />
+          <Router>
+            <div className="min-h-screen bg-[#f7f9fb] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased flex flex-col transition-colors duration-200">
+              <Navbar />
+              <main className="flex-grow">
+                <Routes>
+                  {/* Public Routes (Accessible by all users / guests) */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/departments" element={<Departments />} />
+                  <Route path="/doctors" element={<DoctorDirectory />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/login" element={<Auth initialMode="login" />} />
+                  <Route path="/register" element={<Auth initialMode="register" />} />
+                  <Route path="/staff/login" element={<StaffLogin />} />
+                  <Route path="/staff-login" element={<StaffLogin />} />
 
-        {/* Admin Routes (Uses separate layout without standard Navbar) */}
-        <Routes>
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="appointments" element={<ManageAppointments />} />
-            <Route path="doctors" element={<ManageDoctors />} />
-          </Route>
-        </Routes>
-      </Router>
-    </AuthProvider>
-    </ThemeProvider>
+                  {/* Protected Routes (Requires User Authentication) */}
+                  <Route
+                    path="/book"
+                    element={
+                      <ProtectedRoute>
+                        <BookAppointment />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/book/:doctorId"
+                    element={
+                      <ProtectedRoute>
+                        <BookAppointment />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <PatientProfile />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/patient-profile"
+                    element={
+                      <ProtectedRoute>
+                        <PatientProfile />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Admin & Staff Portal Routes */}
+                  <Route path="/admin" element={<AdminLayout />}>
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="appointments" element={<ManageAppointments />} />
+                    <Route path="doctors" element={<ManageDoctors />} />
+                    <Route path="doctor-profile" element={<DoctorProfile />} />
+                    <Route path="receptionist-profile" element={<ReceptionistProfile />} />
+                  </Route>
+                </Routes>
+              </main>
+              <Footer />
+            </div>
+          </Router>
+        </AuthProvider>
+      </ThemeProvider>
+    </>
   );
 }
 

@@ -6,11 +6,14 @@
 import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 
 const Login = ({ onError, onSuccess }) => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const fromPath = location.state?.from?.pathname || '/dashboard';
     const { login } = useAuth();
 
     const [loginData, setLoginData] = useState({
@@ -69,8 +72,11 @@ const Login = ({ onError, onSuccess }) => {
             window.localStorage.setItem('medtrust_user', JSON.stringify(data));
             login(data);
 
+            toast.success(`Welcome back, ${data.name || 'Patient'}!`, {
+                description: 'You have signed in successfully.',
+            });
             if (onSuccess) onSuccess('Login successful! Redirecting...');
-            navigate('/dashboard');
+            navigate(fromPath, { replace: true });
         } catch (err) {
             // =========================================================================
             // NOTE: LocalStorage Fallback for Testing / Offline Deployment
@@ -102,8 +108,11 @@ const Login = ({ onError, onSuccess }) => {
                     window.localStorage.setItem('medtrust_user', JSON.stringify(sessionData));
                     login(sessionData);
 
+                    toast.success(`Welcome back, ${sessionData.name}!`, {
+                        description: 'Signed in via Local Storage Mode.',
+                    });
                     if (onSuccess) onSuccess('Login successful (Local Storage Mode)! Redirecting...');
-                    navigate('/dashboard');
+                    navigate(fromPath, { replace: true });
                     return;
                 }
             } catch (storageErr) {
@@ -113,6 +122,9 @@ const Login = ({ onError, onSuccess }) => {
             const msg =
                 err.response?.data?.message ||
                 'Invalid email or password. (Hint: Use patient@example.com / password123 for test mode)';
+            toast.error('Sign In Failed', {
+                description: msg,
+            });
             if (onError) onError(msg);
         } finally {
             setLoading(false);
@@ -147,18 +159,17 @@ const Login = ({ onError, onSuccess }) => {
                         <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                             Password *
                         </label>
-                        <a
-                            href="#forgot"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                alert(
-                                    'Test Mode: Use password123 or register a new test account.'
-                                );
+                        <button
+                            type="button"
+                            onClick={() => {
+                                toast.info('Demo Credentials', {
+                                    description: 'Use patient@example.com with password123 or create a new account.',
+                                });
                             }}
                             className="text-xs text-[#00478d] dark:text-blue-400 hover:underline font-medium"
                         >
                             Forgot password?
-                        </a>
+                        </button>
                     </div>
                     <div className="relative">
                         <Lock size={17} className="absolute left-3.5 top-3.5 text-slate-400" />
@@ -224,7 +235,7 @@ const Login = ({ onError, onSuccess }) => {
             <div className="grid grid-cols-2 gap-3">
                 <button
                     type="button"
-                    onClick={() => alert('Google Sign-In integration ready.')}
+                    onClick={() => toast.info('Google Sign-In', { description: 'OAuth 2.0 integration ready.' })}
                     className="flex items-center justify-center gap-2 py-2.5 px-3 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-xs font-semibold text-slate-700 dark:text-slate-200"
                 >
                     <img
@@ -236,7 +247,7 @@ const Login = ({ onError, onSuccess }) => {
                 </button>
                 <button
                     type="button"
-                    onClick={() => alert('ABHA / Ayushman Health ID integration ready.')}
+                    onClick={() => toast.info('Ayushman Bharat ABHA', { description: 'ABHA Health ID authentication ready.' })}
                     className="flex items-center justify-center gap-2 py-2.5 px-3 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-xs font-semibold text-slate-700 dark:text-slate-200"
                 >
                     <span className="w-4 h-4 rounded-full bg-orange-500 text-white font-bold text-[9px] flex items-center justify-center">
