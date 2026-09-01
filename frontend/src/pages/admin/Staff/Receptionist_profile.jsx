@@ -1,7 +1,7 @@
 /**
  * Receptionist Profile Page Component.
- * Displays and allows updating staff information, Employee ID, Desk/Counter Number,
- * Shift Timings, Emergency Contact, and Security Password in MongoDB.
+ * Enforces strict read-only administrative fields (Employee ID, Desk Number, Shift Timings, Hospital Email)
+ * and allows Receptionist to edit Personal Email, Phone, Address, Emergency Contact, and Security Password.
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -23,19 +23,14 @@ import {
     RefreshCw,
     MapPin,
     PhoneCall,
-    Languages
+    Languages,
+    LockKeyhole,
+    Calendar
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { useAuth } from '../../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-
-const SHIFT_OPTIONS = [
-    'Morning Shift (08:00 AM - 04:00 PM)',
-    'Evening Shift (02:00 PM - 10:00 PM)',
-    'Night Shift (10:00 PM - 06:00 AM)',
-    'Full Day General (09:00 AM - 05:00 PM)',
-];
 
 const ReceptionistProfile = () => {
     const { user, login } = useAuth();
@@ -55,12 +50,14 @@ const ReceptionistProfile = () => {
     // Profile form state
     const [profile, setProfile] = useState({
         name: '',
-        email: '',
+        email: '',               // Official Hospital Login Email (Read-only)
+        personalEmail: '',       // Personal Alternate Email (Editable)
         phone: '',
         gender: 'Female',
-        employeeId: 'REC-2024-001',
-        deskNumber: 'Front Desk #1 - Main OPD Registration',
-        shiftTimings: 'Morning Shift (08:00 AM - 04:00 PM)',
+        employeeId: 'REC-2024-002', // Administrative (Read-only)
+        deskNumber: 'Front Desk #1 - Main OPD Registration', // Administrative (Read-only)
+        shiftTimings: 'Morning Shift (08:00 AM - 04:00 PM)', // Administrative (Read-only)
+        dateOfJoining: '',
         languages: 'Hindi, English',
         emergencyContact: '',
         address: '',
@@ -91,12 +88,14 @@ const ReceptionistProfile = () => {
             if (data) {
                 setProfile({
                     name: data.name || user.name || '',
-                    email: data.email || user.email || '',
+                    email: data.hospitalEmail || data.email || user.email || '',
+                    personalEmail: data.personalEmail || '',
                     phone: data.phone || user.phone || '',
                     gender: data.gender || user.gender || 'Female',
                     employeeId: data.employeeId || 'REC-2024-001',
                     deskNumber: data.deskNumber || 'Front Desk #1 - Main OPD Registration',
                     shiftTimings: data.shiftTimings || 'Morning Shift (08:00 AM - 04:00 PM)',
+                    dateOfJoining: data.dateOfJoining || data.createdAt || '',
                     languages: data.languages || 'Hindi, English',
                     emergencyContact: data.emergencyContact || '',
                     address: data.address || '',
@@ -145,6 +144,13 @@ const ReceptionistProfile = () => {
         setLoading(true);
         setStatusMessage({ type: '', text: '' });
 
+        // Validate personal email format if entered
+        if (profile.personalEmail && !/\S+@\S+\.\S+/.test(profile.personalEmail)) {
+            toast.error('Invalid Email', { description: 'Please enter a valid personal email address.' });
+            setLoading(false);
+            return;
+        }
+
         // Validate password change
         if (showPasswordChange && newPassword) {
             if (newPassword.length < 6) {
@@ -172,8 +178,18 @@ const ReceptionistProfile = () => {
                 ? `http://localhost:5000/api/user/profile/${targetId}`
                 : 'http://localhost:5000/api/user/profile';
 
+            // Only send editable fields (admin fields like employeeId, deskNumber are protected on backend)
             const payload = {
-                ...profile,
+                name: profile.name,
+                personalEmail: profile.personalEmail,
+                phone: profile.phone,
+                gender: profile.gender,
+                languages: profile.languages,
+                emergencyContact: profile.emergencyContact,
+                address: profile.address,
+                city: profile.city,
+                state: profile.state,
+                pincode: profile.pincode,
                 ...(showPasswordChange && newPassword ? { password: newPassword } : {}),
             };
 
@@ -189,12 +205,12 @@ const ReceptionistProfile = () => {
             setNewPassword('');
             setConfirmPassword('');
 
-            toast.success('Receptionist Profile Updated', {
-                description: 'Your desk info, shift timings, and contact details are synced.',
+            toast.success('Profile Saved Successfully', {
+                description: 'Your contact details and personal records are updated in MongoDB.',
             });
             setStatusMessage({
                 type: 'success',
-                text: '✓ Receptionist profile and desk assignment saved successfully!',
+                text: '✓ Receptionist profile updated successfully!',
             });
         } catch (err) {
             console.error('Receptionist profile update error:', err);
@@ -233,7 +249,7 @@ const ReceptionistProfile = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#f7f9fb] dark:bg-slate-950 text-slate-900 dark:text-slate-100 py-10 px-6 font-sans antialiased transition-colors duration-200">
+        <div className="min-h-screen bg-[#f7f9fb] dark:bg-slate-950 text-slate-900 dark:text-slate-100 py-3 px-3 font-sans antialiased transition-colors duration-200">
             <div className="max-w-5xl mx-auto space-y-8">
                 {/* Header Card */}
                 <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] border border-slate-100 dark:border-slate-800 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
@@ -258,7 +274,7 @@ const ReceptionistProfile = () => {
                             </div>
 
                             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2 flex-wrap">
-                                <span>{profile.email}</span>
+                                <span className="font-medium text-slate-600 dark:text-slate-300">{profile.email}</span>
                                 <span>•</span>
                                 <span className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                                     <BadgeCheck size={13} className="text-[#00478d]" />
@@ -303,7 +319,7 @@ const ReceptionistProfile = () => {
                                     className="inline-flex items-center gap-2 bg-[#00478d] dark:bg-blue-600 hover:bg-[#003870] dark:hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-semibold shadow-sm transition-all disabled:opacity-60"
                                 >
                                     <Save size={15} />
-                                    <span>{loading ? 'Saving...' : 'Save Profile'}</span>
+                                    <span>{loading ? 'Saving...' : 'Save Changes'}</span>
                                 </button>
                             </>
                         ) : (
@@ -314,7 +330,7 @@ const ReceptionistProfile = () => {
                                     className="inline-flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-sm transition-all"
                                 >
                                     <LayoutDashboard size={15} className="text-[#00478d] dark:text-blue-400" />
-                                    <span>OPD Queue & Walk-Ins</span>
+                                    <span>Live OPD Queue</span>
                                 </button>
                                 <button
                                     type="button"
@@ -322,7 +338,7 @@ const ReceptionistProfile = () => {
                                     className="inline-flex items-center gap-2 bg-[#00478d] dark:bg-blue-600 hover:bg-[#003870] dark:hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-semibold shadow-sm hover:shadow transition-all"
                                 >
                                     <Edit3 size={15} />
-                                    <span>Edit Desk Info</span>
+                                    <span>Edit Contact Info</span>
                                 </button>
                             </>
                         )}
@@ -348,77 +364,156 @@ const ReceptionistProfile = () => {
                 )}
 
                 <form onSubmit={handleSave} className="space-y-8">
-                    {/* 1. Hospital Desk & Shift Assignment */}
+                    {/* 1. Official Hospital Assignment (Strictly Read-Only / Admin Managed) */}
                     <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] border border-slate-100 dark:border-slate-800 p-6 md:p-8">
-                        <div className="flex items-center gap-2.5 text-[#00478d] dark:text-blue-400 font-bold text-lg mb-6 pb-3 border-b border-slate-100 dark:border-slate-800">
-                            <Building size={22} className="text-amber-500" />
-                            <h2>Front Desk Assignment & Shift Details</h2>
+                        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-6 flex-wrap gap-2">
+                            <div className="flex items-center gap-2.5 text-[#00478d] dark:text-blue-400 font-bold text-lg">
+                                <Building size={22} className="text-amber-500" />
+                                <h2>Official Hospital Assignment</h2>
+                            </div>
+                            <span className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                                <LockKeyhole size={12} className="text-amber-500" />
+                                <span>Locked (Managed by Super Admin)</span>
+                            </span>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {/* Employee ID */}
+                            {/* Employee ID (Read-Only) */}
                             <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2">
-                                    Staff Employee ID
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center justify-between">
+                                    <span>Staff Employee ID</span>
+                                    <Lock size={12} className="text-slate-400" />
                                 </label>
-                                {isEditing ? (
-                                    <input
-                                        type="text"
-                                        name="employeeId"
-                                        value={profile.employeeId}
-                                        onChange={handleChange}
-                                        placeholder="REC-2024-001"
-                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:border-[#00478d] bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono"
-                                    />
-                                ) : (
-                                    <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700 text-sm font-mono font-semibold text-slate-800 dark:text-slate-200">
-                                        {profile.employeeId}
-                                    </div>
-                                )}
+                                <div className="p-3 bg-slate-100/80 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-mono font-bold text-slate-700 dark:text-slate-300">
+                                    {profile.employeeId}
+                                </div>
                             </div>
 
-                            {/* Desk / Counter Number */}
+                            {/* Assigned Desk / Counter (Read-Only) */}
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center justify-between">
+                                    <span>Assigned Desk / Counter</span>
+                                    <Lock size={12} className="text-slate-400" />
+                                </label>
+                                <div className="p-3 bg-slate-100/80 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                                    {profile.deskNumber}
+                                </div>
+                            </div>
+
+                            {/* Shift Timings (Read-Only) */}
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center justify-between">
+                                    <span>Assigned Shift</span>
+                                    <Lock size={12} className="text-slate-400" />
+                                </label>
+                                <div className="p-3 bg-slate-100/80 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                                    {profile.shiftTimings}
+                                </div>
+                            </div>
+
+                            {/* Official Hospital Email (Login ID - Read-Only) */}
+                            <div className="sm:col-span-2">
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center justify-between">
+                                    <span>Official Login Hospital Email</span>
+                                    <Lock size={12} className="text-slate-400" />
+                                </label>
+                                <div className="p-3 bg-slate-100/80 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    {profile.email}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 2. Personal & Contact Information (Editable) */}
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] border border-slate-100 dark:border-slate-800 p-6 md:p-8">
+                        <div className="flex items-center gap-2.5 text-[#00478d] dark:text-blue-400 font-bold text-lg mb-6 pb-3 border-b border-slate-100 dark:border-slate-800">
+                            <User size={22} />
+                            <h2>Personal & Contact Information</h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {/* Full Name */}
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2">
-                                    Assigned Desk / Counter
+                                    Full Name *
                                 </label>
                                 {isEditing ? (
                                     <input
                                         type="text"
-                                        name="deskNumber"
-                                        value={profile.deskNumber}
+                                        name="name"
+                                        value={profile.name}
                                         onChange={handleChange}
-                                        placeholder="e.g. Desk #1 - Main OPD"
+                                        required
                                         className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:border-[#00478d] bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                                     />
                                 ) : (
                                     <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700 text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                        {profile.deskNumber}
+                                        {profile.name}
                                     </div>
                                 )}
                             </div>
 
-                            {/* Shift Timings */}
+                            {/* Personal Alternate Email */}
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2">
-                                    Shift Timings
+                                    Personal Email (Alternate)
+                                </label>
+                                {isEditing ? (
+                                    <input
+                                        type="email"
+                                        name="personalEmail"
+                                        value={profile.personalEmail}
+                                        onChange={handleChange}
+                                        placeholder="receptionist.personal@gmail.com"
+                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:border-[#00478d] bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                    />
+                                ) : (
+                                    <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700 text-sm font-medium text-slate-800 dark:text-slate-200">
+                                        {profile.personalEmail || 'No personal email added'}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Phone Number */}
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2">
+                                    Phone Number (+91)
+                                </label>
+                                {isEditing ? (
+                                    <input
+                                        type="tel"
+                                        name="phone"
+                                        value={profile.phone}
+                                        onChange={handleChange}
+                                        placeholder="9876543210"
+                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:border-[#00478d] bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                    />
+                                ) : (
+                                    <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700 text-sm font-medium text-slate-800 dark:text-slate-200">
+                                        {profile.phone || 'Not recorded'}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Gender */}
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2">
+                                    Gender
                                 </label>
                                 {isEditing ? (
                                     <select
-                                        name="shiftTimings"
-                                        value={profile.shiftTimings}
+                                        name="gender"
+                                        value={profile.gender}
                                         onChange={handleChange}
                                         className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:border-[#00478d] bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                                     >
-                                        {SHIFT_OPTIONS.map((shift) => (
-                                            <option key={shift} value={shift}>
-                                                {shift}
-                                            </option>
-                                        ))}
+                                        <option value="Female">Female</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Other">Other</option>
                                     </select>
                                 ) : (
-                                    <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700 text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                        {profile.shiftTimings}
+                                    <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700 text-sm font-medium text-slate-800 dark:text-slate-200">
+                                        {profile.gender}
                                     </div>
                                 )}
                             </div>
@@ -445,9 +540,9 @@ const ReceptionistProfile = () => {
                             </div>
 
                             {/* Emergency Contact */}
-                            <div className="sm:col-span-2">
+                            <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2">
-                                    Emergency Contact (Family / Guardian Phone)
+                                    Emergency Contact Phone
                                 </label>
                                 {isEditing ? (
                                     <input
@@ -455,85 +550,89 @@ const ReceptionistProfile = () => {
                                         name="emergencyContact"
                                         value={profile.emergencyContact}
                                         onChange={handleChange}
-                                        placeholder="e.g. 9811122334"
+                                        placeholder="e.g. 9811122334 (Guardian/Family)"
                                         className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:border-[#00478d] bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                                     />
                                 ) : (
                                     <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700 text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                        {profile.emergencyContact || 'Not recorded'}
+                                        {profile.emergencyContact || 'Not set'}
                                     </div>
                                 )}
                             </div>
                         </div>
-                    </div>
 
-                    {/* 2. Personal & Contact Details */}
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] border border-slate-100 dark:border-slate-800 p-6 md:p-8">
-                        <div className="flex items-center gap-2.5 text-[#00478d] dark:text-blue-400 font-bold text-lg mb-6 pb-3 border-b border-slate-100 dark:border-slate-800">
-                            <User size={22} />
-                            <h2>Staff Personal Information</h2>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {/* Name */}
-                            <div>
+                        {/* Address */}
+                        <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-6">
+                            <div className="sm:col-span-3">
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2">
-                                    Full Name
+                                    Residential Address
                                 </label>
                                 {isEditing ? (
                                     <input
                                         type="text"
-                                        name="name"
-                                        value={profile.name}
+                                        name="address"
+                                        value={profile.address}
                                         onChange={handleChange}
-                                        required
+                                        placeholder="e.g. House No. 24, Near City Mall"
                                         className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:border-[#00478d] bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                                     />
                                 ) : (
-                                    <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700 text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                        {profile.name}
+                                    <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700 text-sm font-medium text-slate-800 dark:text-slate-200">
+                                        {profile.address || 'No address provided'}
                                     </div>
                                 )}
                             </div>
-
-                            {/* Email */}
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2">
-                                    Hospital Email
+                                    City
                                 </label>
                                 {isEditing ? (
                                     <input
-                                        type="email"
-                                        name="email"
-                                        value={profile.email}
+                                        type="text"
+                                        name="city"
+                                        value={profile.city}
                                         onChange={handleChange}
-                                        required
-                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:border-[#00478d] bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                                     />
                                 ) : (
-                                    <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700 text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                        {profile.email}
+                                    <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200">
+                                        {profile.city}
                                     </div>
                                 )}
                             </div>
-
-                            {/* Phone */}
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2">
-                                    Phone Number
+                                    State
                                 </label>
                                 {isEditing ? (
                                     <input
-                                        type="tel"
-                                        name="phone"
-                                        value={profile.phone}
+                                        type="text"
+                                        name="state"
+                                        value={profile.state}
                                         onChange={handleChange}
-                                        placeholder="9876543210"
-                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:border-[#00478d] bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                                     />
                                 ) : (
-                                    <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700 text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                        {profile.phone || 'Not recorded'}
+                                    <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200">
+                                        {profile.state}
+                                    </div>
+                                )}
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2">
+                                    Pincode
+                                </label>
+                                {isEditing ? (
+                                    <input
+                                        type="text"
+                                        name="pincode"
+                                        value={profile.pincode}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                    />
+                                ) : (
+                                    <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-100 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-200">
+                                        {profile.pincode || 'Not set'}
                                     </div>
                                 )}
                             </div>
@@ -549,7 +648,7 @@ const ReceptionistProfile = () => {
                                             Update Security Password
                                         </h3>
                                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                                            Update your temporary password to a secure personal password
+                                            Change your password from temporary to a secure personal password
                                         </p>
                                     </div>
                                     <button

@@ -72,10 +72,9 @@ export const updateUserProfile = async (req, res, next) => {
 
         const updateData = {};
 
-        // Allowed fields for Patient, Receptionist, and Doctor users
-        const allowedFields = [
+        // Base allowed editable fields for regular users (Patients, Receptionists, Doctors)
+        const regularAllowedFields = [
             'name',
-            'email',
             'phone',
             'gender',
             'dob',
@@ -86,10 +85,25 @@ export const updateUserProfile = async (req, res, next) => {
             'pincode',
             'languages',
             'emergencyContact',
+            'personalEmail',
+        ];
+
+        // Super Admin exclusive administrative fields
+        const adminOnlyFields = [
+            'email',
+            'hospitalEmail',
             'employeeId',
             'deskNumber',
             'shiftTimings',
+            'dateOfJoining',
+            'role',
+            'isActive',
         ];
+
+        // Determine permitted fields based on requester role
+        const allowedFields = req.user.role === 'Super Admin'
+            ? [...regularAllowedFields, ...adminOnlyFields]
+            : regularAllowedFields;
 
         allowedFields.forEach((field) => {
             if (req.body[field] !== undefined) {

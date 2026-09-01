@@ -20,13 +20,21 @@ const doctorSchema = new mongoose.Schema({
     phone: {
         type: String,
     },
+    gender: {
+        type: String,
+        enum: ['Male', 'Female', 'Other'],
+    },
     specialty: {
         type: String,
         required: true,
     },
+    languages: {
+        type: String,
+        default: 'Hindi, English',
+    },
     licenseNumber: {
         type: String,
-        default: 'MCI-REG-84920',
+        required: true,
     },
     qualifications: {
         type: String,
@@ -51,6 +59,18 @@ const doctorSchema = new mongoose.Schema({
         type: String,
         enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     }],
+    address: {
+        type: String,
+    },
+    city: {
+        type: String,
+    },
+    state: {
+        type: String,
+    },
+    pincode: {
+        type: String,
+    },
     image: {
         type: String, // URL of the doctor's profile image
     },

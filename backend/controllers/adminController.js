@@ -87,13 +87,20 @@ export const createStaffMember = async (req, res, next) => {
         phone,
         gender,
         temporaryPassword = 'Welcome@123',
+        licenseNumber,
+        qualifications,
         specialty,
         experience,
         fees,
         about,
         availableDays,
+        deskNumber,
+        employeeId,
+        shiftTimings,
         image
     } = req.body;
+
+    let newStaffUser = null;
 
     try {
         // 1. Validation
@@ -109,41 +116,62 @@ export const createStaffMember = async (req, res, next) => {
         }
 
         // 2. Check if email already exists
-        const existingUser = await User.findOne({ email: email.toLowerCase() });
+        const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
         if (existingUser) {
             res.status(400);
-            throw new Error(`A user with email ${email} already exists.`);
+            throw new Error(`A staff user with email ${email} already exists in the system.`);
         }
 
-        // 3. Create the User account with isFirstLogin: true
-        const newStaffUser = await User.create({
-            name,
-            email: email.toLowerCase(),
+        // 3. If role is Doctor, validate licenseNumber
+        if (role === 'Doctor' && !licenseNumber) {
+            res.status(400);
+            throw new Error('Medical License / Registration Number is required for Doctors.');
+        }
+
+        // 4. Create the User account with isFirstLogin: true
+        newStaffUser = await User.create({
+            name: name.trim(),
+            email: email.toLowerCase().trim(),
             password: temporaryPassword,
             role,
             phone: phone || '',
             gender: gender || 'Male',
+            employeeId: employeeId ,
+            deskNumber: deskNumber || 'Front Desk #1',
+            shiftTimings: shiftTimings || 'Morning Shift (08:00 AM - 04:00 PM)',
+            hospitalEmail: email.toLowerCase().trim(),
             isFirstLogin: true, // Forces password change on first login
             isActive: true,
         });
 
         let createdDoctorProfile = null;
 
-        // 4. If creating a Doctor, create and link Doctor document
+        // 5. If creating a Doctor, create and link Doctor document
         if (role === 'Doctor') {
-            createdDoctorProfile = await Doctor.create({
-                user: newStaffUser._id,
-                name: name.startsWith('Dr.') ? name : `Dr. ${name}`,
-                email: email.toLowerCase(),
-                phone: phone || '',
-                specialty: specialty || 'General Medicine',
-                experience: Number(experience) || 3,
-                fees: Number(fees) || 500,
-                about: about || 'Experienced healthcare specialist at MedTrust.',
-                availableDays: availableDays && availableDays.length > 0 ? availableDays : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-                image: image || 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80',
-                isActive: true,
-            });
+            try {
+                createdDoctorProfile = await Doctor.create({
+                    user: newStaffUser._id,
+                    name: name.startsWith('Dr.') ? name : `Dr. ${name}`,
+                    email: email.toLowerCase().trim(),
+                    phone: phone || '',
+                    gender: gender || 'Male',
+                    licenseNumber: licenseNumber.trim(),
+                    qualifications: qualifications || 'MBBS, MD',
+                    specialty: specialty || 'General Medicine',
+                    experience: Number(experience) || 3,
+                    fees: Number(fees) || 500,
+                    about: about || 'Experienced healthcare specialist at MedTrust.',
+                    availableDays: availableDays && availableDays.length > 0 ? availableDays : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+                    image: image || 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80',
+                    isActive: true,
+                });
+            } catch (docErr) {
+                // Rollback user creation if Doctor creation fails
+                if (newStaffUser?._id) {
+                    await User.findByIdAndDelete(newStaffUser._id);
+                }
+                throw docErr;
+            }
         }
 
         const { password: pass, ...rest } = newStaffUser._doc;
@@ -155,6 +183,14 @@ export const createStaffMember = async (req, res, next) => {
             doctorProfile: createdDoctorProfile,
         });
     } catch (error) {
+        // Rollback user creation if unhandled failure occurs
+        if (newStaffUser?._id) {
+            try {
+                await User.findByIdAndDelete(newStaffUser._id);
+            } catch (cleanupErr) {
+                console.error('Rollback cleanup failed:', cleanupErr);
+            }
+        }
         next(error);
     }
 };

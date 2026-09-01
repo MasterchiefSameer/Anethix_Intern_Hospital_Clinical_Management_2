@@ -26,10 +26,23 @@ const appointmentSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Confirmed', 'Cancelled', 'Completed'],
-        default: 'Pending',
+        enum: ['Scheduled', 'Pending', 'Confirmed', 'Checked-In', 'Completed', 'No-Show', 'Cancelled'],
+        default: 'Scheduled',
     },
     reason: {
+        type: String,
+    },
+    isWalkIn: {
+        type: Boolean,
+        default: false,
+    },
+    tokenNumber: {
+        type: Number,
+    },
+    patientName: {
+        type: String,
+    },
+    patientPhone: {
         type: String,
     },
     isPaid: {

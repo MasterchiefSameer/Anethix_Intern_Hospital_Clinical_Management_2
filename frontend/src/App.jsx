@@ -87,8 +87,15 @@ function App() {
                     }
                   />
 
-                  {/* Admin & Staff Portal Routes */}
-                  <Route path="/admin" element={<AdminLayout />}>
+                  {/* Admin & Staff Portal Routes (Strict RBAC Protected) */}
+                  <Route
+                    path="/admin"
+                    element={
+                      <ProtectedRoute allowedRoles={['Super Admin', 'Receptionist', 'Doctor']}>
+                        <AdminLayout />
+                      </ProtectedRoute>
+                    }
+                  >
                     <Route index element={<AdminDashboard />} />
                     <Route path="appointments" element={<ManageAppointments />} />
                     <Route path="doctors" element={<ManageDoctors />} />

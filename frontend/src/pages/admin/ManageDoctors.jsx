@@ -53,11 +53,13 @@ const ManageDoctors = () => {
         temporaryPassword: 'Welcome@123',
         phone: '',
         gender: 'Male',
+        licenseNumber: '',
         specialty: 'General Medicine',
         experience: 5,
         fees: 500,
         about: '',
     });
+    console.log(formData);
     const [submitting, setSubmitting] = useState(false);
 
     // Fetch Staff List from Backend
@@ -181,6 +183,22 @@ const ManageDoctors = () => {
     // 3. Handle Add Staff Submission
     const handleAddStaffSubmit = async (e) => {
         e.preventDefault();
+
+        // Strict Client-side Validation to prevent accidental premature submissions
+        if (!formData.name?.trim() || !formData.email?.trim() || !formData.temporaryPassword?.trim()) {
+            toast.error('Missing Information', {
+                description: 'Please fill in Full Name, Official Email, and Temporary Password.',
+            });
+            return;
+        }
+
+        if (formData.role === 'Doctor' && !formData.licenseNumber?.trim()) {
+            toast.error('License Number Required', {
+                description: 'Please provide the Medical Registration / License Number for the Doctor.',
+            });
+            return;
+        }
+
         setSubmitting(true);
 
         try {
@@ -218,8 +236,12 @@ const ManageDoctors = () => {
                 phone: '',
                 gender: 'Male',
                 specialty: 'General Medicine',
+                licenseNumber: '',
+                qualifications: 'MBBS, MD',
                 experience: 5,
                 fees: 500,
+                deskNumber: 'Front Desk #1',
+                shiftTimings: 'Morning Shift (08:00 AM - 04:00 PM)',
                 about: '',
             });
         } catch (err) {
@@ -498,6 +520,36 @@ const ManageDoctors = () => {
                                 </div>
                             </div>
 
+                            {/* Contact & Gender */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
+                                        Phone Number (+91)
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        placeholder="9876543210"
+                                        value={formData.phone}
+                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:border-[#00478d] bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
+                                        Gender
+                                    </label>
+                                    <select
+                                        value={formData.gender}
+                                        onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:border-[#00478d] bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium"
+                                    >
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             {/* Temporary Password */}
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
@@ -514,16 +566,44 @@ const ManageDoctors = () => {
 
                             {/* Doctor Specific Fields */}
                             {formData.role === 'Doctor' && (
-                                <>
+                                <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <div>
                                             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
-                                                Specialty Department
+                                                Medical License / Reg No. *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="MCI-REG-84920"
+                                                value={formData.licenseNumber}
+                                                onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:border-[#00478d] bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
+                                                Qualifications
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="MBBS, MD (AIIMS)"
+                                                value={formData.qualifications}
+                                                onChange={(e) => setFormData({ ...formData, qualifications: e.target.value })}
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:border-[#00478d] bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
+                                                Specialty Department *
                                             </label>
                                             <select
                                                 value={formData.specialty}
                                                 onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
-                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:border-[#00478d] bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:border-[#00478d] bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium"
                                             >
                                                 <option value="Cardiology">Cardiology</option>
                                                 <option value="Pediatrics">Pediatrics</option>
@@ -545,7 +625,42 @@ const ManageDoctors = () => {
                                             />
                                         </div>
                                     </div>
-                                </>
+                                </div>
+                            )}
+
+                            {/* Receptionist Specific Fields */}
+                            {formData.role === 'Receptionist' && (
+                                <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
+                                                Desk / Counter Assignment
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="Front Desk #1"
+                                                value={formData.deskNumber}
+                                                onChange={(e) => setFormData({ ...formData, deskNumber: e.target.value })}
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:border-[#00478d] bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
+                                                Shift Timings
+                                            </label>
+                                            <select
+                                                value={formData.shiftTimings}
+                                                onChange={(e) => setFormData({ ...formData, shiftTimings: e.target.value })}
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:border-[#00478d] bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium"
+                                            >
+                                                <option value="Morning Shift (08:00 AM - 04:00 PM)">Morning Shift (08:00 AM - 04:00 PM)</option>
+                                                <option value="Evening Shift (02:00 PM - 10:00 PM)">Evening Shift (02:00 PM - 10:00 PM)</option>
+                                                <option value="Night Shift (10:00 PM - 06:00 AM)">Night Shift (10:00 PM - 06:00 AM)</option>
+                                                <option value="Full Day General (09:00 AM - 05:00 PM)">Full Day General (09:00 AM - 05:00 PM)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
                             )}
 
                             <div className="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">

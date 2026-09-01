@@ -74,7 +74,7 @@ const DoctorProfile = () => {
         gender: 'Male',
         licenseNumber: 'MCI-84920',
         qualifications: 'MBBS, MD',
-        specialty: 'General Physician',
+        specialty: '',
         experience: 5,
         fees: 500,
         timeSlots: '09:00 AM - 01:00 PM, 05:00 PM - 08:00 PM',
@@ -114,7 +114,7 @@ const DoctorProfile = () => {
                     gender: data.gender || user.gender || 'Male',
                     licenseNumber: doc.licenseNumber || data.licenseNumber || 'MCI-84920',
                     qualifications: doc.qualifications || data.qualifications || 'MBBS, MD',
-                    specialty: doc.specialty || data.specialty || 'General Physician',
+                    specialty: doc.specialty || data.specialty || '',
                     experience: doc.experience !== undefined ? doc.experience : 5,
                     fees: doc.fees !== undefined ? doc.fees : 500,
                     timeSlots: doc.timeSlots || '09:00 AM - 01:00 PM, 05:00 PM - 08:00 PM',
@@ -368,11 +368,10 @@ const DoctorProfile = () => {
                 {/* Status Message */}
                 {statusMessage.text && (
                     <div
-                        className={`p-4 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2.5 transition-all ${
-                            statusMessage.type === 'success'
+                        className={`p-4 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2.5 transition-all ${statusMessage.type === 'success'
                                 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
                                 : 'bg-red-50 dark:bg-red-950/50 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800'
-                        }`}
+                            }`}
                     >
                         {statusMessage.type === 'success' ? (
                             <CheckCircle2 size={18} className="text-emerald-500" />
@@ -405,11 +404,10 @@ const DoctorProfile = () => {
                                             type="button"
                                             onClick={() => toggleDay(day)}
                                             disabled={!isEditing}
-                                            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                                                isSelected
+                                            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${isSelected
                                                     ? 'bg-[#006a63] text-white shadow-sm ring-2 ring-[#006a63]/20'
                                                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 opacity-60'
-                                            } ${isEditing ? 'cursor-pointer hover:opacity-90' : 'cursor-default'}`}
+                                                } ${isEditing ? 'cursor-pointer hover:opacity-90' : 'cursor-default'}`}
                                         >
                                             {isSelected && <Check size={14} />}
                                             <span>{day}</span>

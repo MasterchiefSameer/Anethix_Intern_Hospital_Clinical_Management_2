@@ -76,6 +76,18 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: '',
     },
+    hospitalEmail: {
+        type: String,
+        default: '',
+    },
+    personalEmail: {
+        type: String,
+        default: '',
+    },
+    dateOfJoining: {
+        type: Date,
+        default: Date.now,
+    },
     deskNumber: {
         type: String,
         default: 'Front Desk #1',

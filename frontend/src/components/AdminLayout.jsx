@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
+import StaffNavbar from './admin/StaffNavbar';
 
 const AdminLayout = () => {
     const location = useLocation();
@@ -39,6 +40,7 @@ const AdminLayout = () => {
             { name: 'Appointments', path: '/admin/appointments', icon: Calendar },
             { name: 'Patients', path: '/admin/patients', icon: Users },
             { name: 'Inquiries', path: '/admin/inquiries', icon: MessageSquare },
+            { name: 'Super Admin Settings', path: '/admin/admin-profile', icon: Settings },
         ];
     } else if (role === 'Receptionist') {
         navItems = [
@@ -155,28 +157,8 @@ const AdminLayout = () => {
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0">
-                {/* Staff Topbar */}
-                <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 h-16 px-6 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                            Hospital Workspace
-                        </span>
-                        <span className="text-xs text-slate-300 dark:text-slate-700">•</span>
-                        <span className="text-xs font-semibold text-[#00478d] dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-full">
-                            {role} Mode
-                        </span>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
-                            <ShieldCheck size={16} className="text-emerald-500" />
-                            <span>HIPAA Secured Session</span>
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-slate-800 text-[#00478d] dark:text-blue-400 flex items-center justify-center font-bold text-xs">
-                            {user?.name ? user.name.charAt(0).toUpperCase() : 'S'}
-                        </div>
-                    </div>
-                </header>
+                {/* Staff Topbar / Navbar */}
+                <StaffNavbar />
 
                 {/* Page Content */}
                 <main className="p-6 md:p-8 flex-1 overflow-auto">

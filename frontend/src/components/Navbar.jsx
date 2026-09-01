@@ -47,9 +47,24 @@ const Navbar = () => {
                 description: 'Please sign in or register to schedule an OPD slot.',
             });
             navigate('/login', { state: { from: { pathname: '/doctors' } } });
+        } else if (user.role === 'Receptionist') {
+            navigate('/admin/appointments');
+        } else if (user.role === 'Doctor') {
+            navigate('/admin/appointments');
+        } else if (user.role === 'Super Admin') {
+            navigate('/admin');
         } else {
             navigate('/doctors');
         }
+    };
+
+    // Dynamic CTA button label based on role
+    const getCtaLabel = () => {
+        if (!user) return 'Book Appointment';
+        if (user.role === 'Receptionist') return 'Walk-In Booking';
+        if (user.role === 'Doctor') return 'My OPD Schedule';
+        if (user.role === 'Super Admin') return 'Admin Console';
+        return 'Book Appointment';
     };
 
     return (
@@ -97,18 +112,6 @@ const Navbar = () => {
                     >
                         Doctors
                     </Link>
-                    {user && (
-                        <Link
-                            to="/dashboard"
-                            className={`text-sm font-medium transition-colors ${
-                                isActive('/dashboard')
-                                    ? 'text-[#00478d] dark:text-blue-400 border-b-2 border-[#00478d] dark:border-blue-400 pb-1 font-semibold'
-                                    : 'text-slate-600 dark:text-slate-300 hover:text-[#00478d] dark:hover:text-blue-400'
-                            }`}
-                        >
-                            Dashboard
-                        </Link>
-                    )}
                     <Link
                         to="/about"
                         className={`text-sm font-medium transition-colors ${
@@ -129,6 +132,18 @@ const Navbar = () => {
                     >
                         Contact
                     </Link>
+                    {user && (
+                        <Link
+                            to={user.role === 'Patient' ? '/dashboard' : '/admin'}
+                            className={`text-sm font-medium transition-colors ${
+                                isActive('/dashboard') || isActive('/admin')
+                                    ? 'text-[#00478d] dark:text-blue-400 border-b-2 border-[#00478d] dark:border-blue-400 pb-1 font-semibold'
+                                    : 'text-slate-600 dark:text-slate-300 hover:text-[#00478d] dark:hover:text-blue-400'
+                            }`}
+                        >
+                            {user.role === 'Patient' ? 'Dashboard' : `${user.role} Portal`}
+                        </Link>
+                    )}
                 </nav>
 
                 {/* Action Buttons */}
@@ -147,13 +162,13 @@ const Navbar = () => {
                         )}
                     </button>
 
-                    {/* Book Appointment CTA */}
+                    {/* Dynamic Action CTA */}
                     <button
                         type="button"
                         onClick={handleBookAppointmentClick}
                         className="hidden sm:inline-flex items-center justify-center bg-[#00478d] dark:bg-blue-600 text-white hover:bg-[#003870] dark:hover:bg-blue-700 transition-colors text-sm font-semibold px-5 py-2 rounded-xl shadow-sm"
                     >
-                        Book Appointment
+                        {getCtaLabel()}
                     </button>
 
                     {/* Profile Section with Hover & Click Dropdown */}
@@ -165,7 +180,7 @@ const Navbar = () => {
                                 className="flex items-center gap-2 p-1 rounded-full border border-slate-200 dark:border-slate-700 hover:border-[#00478d] dark:hover:border-blue-400 transition-all focus:outline-none"
                             >
                                 <div className="w-8 h-8 rounded-full bg-[#00478d] dark:bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">
-                                    {user.name ? user.name.charAt(0).toUpperCase() : 'P'}
+                                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                                 </div>
                             </button>
 
@@ -181,7 +196,7 @@ const Navbar = () => {
                                 <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
                                     <div className="flex items-center justify-between mb-1">
                                         <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
-                                            {user.name || 'Patient User'}
+                                            {user.name || 'Staff User'}
                                         </p>
                                         {user.bloodGroup && (
                                             <span className="text-[10px] bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 font-extrabold px-1.5 py-0.5 rounded">
@@ -197,35 +212,102 @@ const Navbar = () => {
                                     </span>
                                 </div>
 
-                                {/* Menu Links */}
+                                {/* Menu Links Based on Role */}
                                 <div className="py-2 space-y-0.5">
-                                    <Link
-                                        to="/dashboard"
-                                        onClick={() => setDropdownOpen(false)}
-                                        className="flex items-center gap-3 px-4 py-2 text-xs font-semibold text-[#00478d] dark:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-slate-800 transition-colors"
-                                    >
-                                        <LayoutDashboard size={16} className="text-[#00478d] dark:text-blue-400" />
-                                        <span>Dashboard & Appointments</span>
-                                    </Link>
+                                    {/* Receptionist Dropdown */}
+                                    {user.role === 'Receptionist' && (
+                                        <>
+                                            <Link
+                                                to="/admin"
+                                                onClick={() => setDropdownOpen(false)}
+                                                className="flex items-center gap-3 px-4 py-2 text-xs font-semibold text-[#00478d] dark:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-slate-800 transition-colors"
+                                            >
+                                                <LayoutDashboard size={16} />
+                                                <span>Reception Dashboard</span>
+                                            </Link>
+                                            <Link
+                                                to="/admin/receptionist-profile"
+                                                onClick={() => setDropdownOpen(false)}
+                                                className="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#00478d] dark:hover:text-blue-400 transition-colors"
+                                            >
+                                                <User size={16} />
+                                                <span>My Staff Profile</span>
+                                            </Link>
+                                            <Link
+                                                to="/admin/appointments"
+                                                onClick={() => setDropdownOpen(false)}
+                                                className="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#00478d] dark:hover:text-blue-400 transition-colors"
+                                            >
+                                                <Calendar size={16} />
+                                                <span>Live OPD Queue</span>
+                                            </Link>
+                                        </>
+                                    )}
 
-                                    <Link
-                                        to="/profile"
-                                        onClick={() => setDropdownOpen(false)}
-                                        className="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#00478d] dark:hover:text-blue-400 transition-colors"
-                                    >
-                                        <User size={16} className="text-slate-500 dark:text-slate-400" />
-                                        <span>My Medical Profile</span>
-                                    </Link>
+                                    {/* Doctor Dropdown */}
+                                    {user.role === 'Doctor' && (
+                                        <>
+                                            <Link
+                                                to="/admin/appointments"
+                                                onClick={() => setDropdownOpen(false)}
+                                                className="flex items-center gap-3 px-4 py-2 text-xs font-semibold text-[#00478d] dark:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-slate-800 transition-colors"
+                                            >
+                                                <Calendar size={16} />
+                                                <span>Doctor Schedule</span>
+                                            </Link>
+                                            <Link
+                                                to="/admin/doctor-profile"
+                                                onClick={() => setDropdownOpen(false)}
+                                                className="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#00478d] dark:hover:text-blue-400 transition-colors"
+                                            >
+                                                <User size={16} />
+                                                <span>My Doctor Profile</span>
+                                            </Link>
+                                        </>
+                                    )}
 
+                                    {/* Super Admin Dropdown */}
                                     {user.role === 'Super Admin' && (
-                                        <Link
-                                            to="/admin"
-                                            onClick={() => setDropdownOpen(false)}
-                                            className="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#00478d] dark:hover:text-blue-400 transition-colors"
-                                        >
-                                            <Shield size={16} className="text-purple-500" />
-                                            <span>Admin Console</span>
-                                        </Link>
+                                        <>
+                                            <Link
+                                                to="/admin"
+                                                onClick={() => setDropdownOpen(false)}
+                                                className="flex items-center gap-3 px-4 py-2 text-xs font-semibold text-purple-600 dark:text-purple-400 hover:bg-purple-50/50 dark:hover:bg-slate-800 transition-colors"
+                                            >
+                                                <Shield size={16} />
+                                                <span>Admin Console</span>
+                                            </Link>
+                                            <Link
+                                                to="/admin/doctors"
+                                                onClick={() => setDropdownOpen(false)}
+                                                className="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-purple-600 transition-colors"
+                                            >
+                                                <User size={16} />
+                                                <span>Manage Staff & Doctors</span>
+                                            </Link>
+                                        </>
+                                    )}
+
+                                    {/* Patient Dropdown (Default) */}
+                                    {(!user.role || user.role === 'Patient') && (
+                                        <>
+                                            <Link
+                                                to="/dashboard"
+                                                onClick={() => setDropdownOpen(false)}
+                                                className="flex items-center gap-3 px-4 py-2 text-xs font-semibold text-[#00478d] dark:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-slate-800 transition-colors"
+                                            >
+                                                <LayoutDashboard size={16} />
+                                                <span>Dashboard & Appointments</span>
+                                            </Link>
+                                            <Link
+                                                to="/profile"
+                                                onClick={() => setDropdownOpen(false)}
+                                                className="flex items-center gap-3 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#00478d] dark:hover:text-blue-400 transition-colors"
+                                            >
+                                                <User size={16} />
+                                                <span>My Medical Profile</span>
+                                            </Link>
+                                        </>
                                     )}
                                 </div>
 
