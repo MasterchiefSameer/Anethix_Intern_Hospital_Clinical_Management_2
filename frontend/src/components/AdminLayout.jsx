@@ -22,7 +22,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
-import StaffNavbar from './admin/StaffNavbar';
 
 const AdminLayout = () => {
     const location = useLocation();
@@ -157,9 +156,6 @@ const AdminLayout = () => {
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0">
-                {/* Staff Topbar / Navbar */}
-                <StaffNavbar />
-
                 {/* Page Content */}
                 <main className="p-6 md:p-8 flex-1 overflow-auto">
                     <Outlet />

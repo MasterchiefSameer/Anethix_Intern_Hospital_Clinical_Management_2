@@ -102,16 +102,42 @@ const Navbar = () => {
                     >
                         Departments
                     </Link>
-                    <Link
-                        to="/doctors"
-                        className={`text-sm font-medium transition-colors ${
-                            isActive('/doctors')
-                                ? 'text-[#00478d] dark:text-blue-400 border-b-2 border-[#00478d] dark:border-blue-400 pb-1 font-semibold'
-                                : 'text-slate-600 dark:text-slate-300 hover:text-[#00478d] dark:hover:text-blue-400'
-                        }`}
-                    >
-                        Doctors
-                    </Link>
+                    {(!user || user.role === 'Patient') && (
+                        <Link
+                            to="/doctors"
+                            className={`text-sm font-medium transition-colors ${
+                                isActive('/doctors')
+                                    ? 'text-[#00478d] dark:text-blue-400 border-b-2 border-[#00478d] dark:border-blue-400 pb-1 font-semibold'
+                                    : 'text-slate-600 dark:text-slate-300 hover:text-[#00478d] dark:hover:text-blue-400'
+                            }`}
+                        >
+                            Find Doctors
+                        </Link>
+                    )}
+                    {user?.role === 'Super Admin' && (
+                        <Link
+                            to="/admin/doctors"
+                            className={`text-sm font-medium transition-colors ${
+                                isActive('/admin/doctors')
+                                    ? 'text-[#00478d] dark:text-blue-400 border-b-2 border-[#00478d] dark:border-blue-400 pb-1 font-semibold'
+                                    : 'text-slate-600 dark:text-slate-300 hover:text-[#00478d] dark:hover:text-blue-400'
+                            }`}
+                        >
+                            Manage Doctors
+                        </Link>
+                    )}
+                    {user?.role === 'Receptionist' && (
+                        <Link
+                            to="/admin/appointments"
+                            className={`text-sm font-medium transition-colors ${
+                                isActive('/admin/appointments')
+                                    ? 'text-[#00478d] dark:text-blue-400 border-b-2 border-[#00478d] dark:border-blue-400 pb-1 font-semibold'
+                                    : 'text-slate-600 dark:text-slate-300 hover:text-[#00478d] dark:hover:text-blue-400'
+                            }`}
+                        >
+                            Doctor Roster
+                        </Link>
+                    )}
                     <Link
                         to="/about"
                         className={`text-sm font-medium transition-colors ${
@@ -163,13 +189,15 @@ const Navbar = () => {
                     </button>
 
                     {/* Dynamic Action CTA */}
-                    <button
-                        type="button"
-                        onClick={handleBookAppointmentClick}
-                        className="hidden sm:inline-flex items-center justify-center bg-[#00478d] dark:bg-blue-600 text-white hover:bg-[#003870] dark:hover:bg-blue-700 transition-colors text-sm font-semibold px-5 py-2 rounded-xl shadow-sm"
-                    >
-                        {getCtaLabel()}
-                    </button>
+                    {(!user || user.role === 'Patient') && (
+                        <button
+                            type="button"
+                            onClick={handleBookAppointmentClick}
+                            className="hidden sm:inline-flex items-center justify-center bg-[#00478d] dark:bg-blue-600 text-white hover:bg-[#003870] dark:hover:bg-blue-700 transition-colors text-sm font-semibold px-5 py-2 rounded-xl shadow-sm"
+                        >
+                            Book Appointment
+                        </button>
+                    )}
 
                     {/* Profile Section with Hover & Click Dropdown */}
                     {user ? (
