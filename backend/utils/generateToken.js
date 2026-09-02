@@ -12,7 +12,7 @@ const generateToken = (res, userId) => {
     res.cookie('jwt', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax', // Compatible with localhost cross-port development
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Must be 'none' for cross-domain on Vercel
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
