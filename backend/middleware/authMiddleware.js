@@ -5,15 +5,16 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
-// Protect routes
+// Protect routes, how req.user is born:
 const protect = async (req, res, next) => {
     let token;
 
-    // 1. Check HTTP-only cookie first
+    // 1. (if cookies exist) -> Check HTTP-only cookie first or use token from Authorization Header
     if (req.cookies && req.cookies.jwt) {
         token = req.cookies.jwt;
     }
-    // 2. Fallback to Authorization Header (Bearer token)
+    // 2. (case of no cookies exist) -> Fallback to Authorization He`ader (Bearer token)
+    // NOT retrieve cookies!, Instead, they retrieve the token from an alternative location: the HTTP Request Header (specifically the Authorization header).
     else if (
         req.headers.authorization &&
         req.headers.authorization.startsWith('Bearer')
@@ -23,12 +24,15 @@ const protect = async (req, res, next) => {
 
     if (token) {
         try {
+            // A. Decode & Verify
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            // B. Fetch user & ATTACH TO `req.user`! or  ATTACH THE USER TO THE `req` OBJECT! 
             req.user = await User.findById(decoded.userId).select('-password');
             if (!req.user) {
                 res.status(401);
                 return next(new Error('User not found'));
             }
+            // C. Pass control to controller
             next();
         } catch (error) {
             res.status(401);
@@ -40,7 +44,7 @@ const protect = async (req, res, next) => {
     }
 };
 
-// Grant access to specific roles
+// Grant access to specific roles, Only Super Admin and Receptionist can access this route:
 const authorizeRoles = (...roles) => {
     return (req, res, next) => {
         if (!req.user || !roles.includes(req.user.role)) {

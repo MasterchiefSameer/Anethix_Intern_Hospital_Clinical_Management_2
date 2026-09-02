@@ -80,8 +80,8 @@ const ReceptionistProfile = () => {
             };
 
             const endpoint = targetId
-                ? `http://localhost:5000/api/user/profile/${targetId}`
-                : 'http://localhost:5000/api/user/profile';
+                ? `${import.meta.env.VITE_API_URL}/api/user/profile/${targetId}`
+                : `${import.meta.env.VITE_API_URL}/api/user/profile`;
 
             const { data } = await axios.get(endpoint, config);
 
@@ -175,8 +175,8 @@ const ReceptionistProfile = () => {
             };
 
             const endpoint = targetId
-                ? `http://localhost:5000/api/user/profile/${targetId}`
-                : 'http://localhost:5000/api/user/profile';
+                ? `${import.meta.env.VITE_API_URL}/api/user/profile/${targetId}`
+                : `${import.meta.env.VITE_API_URL}/api/user/profile`;
 
             // Only send editable fields (admin fields like employeeId, deskNumber are protected on backend)
             const payload = {
@@ -352,7 +352,7 @@ const ReceptionistProfile = () => {
                             statusMessage.type === 'success'
                                 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
                                 : 'bg-red-50 dark:bg-red-950/50 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800'
-                        }`}
+                            }`}
                     >
                         {statusMessage.type === 'success' ? (
                             <CheckCircle2 size={18} className="text-emerald-500" />

@@ -69,7 +69,7 @@ const StaffLogin = () => {
 
         try {
             const { data } = await axios.post(
-                'http://localhost:5000/api/auth/staff/login',
+                `${import.meta.env.VITE_API_URL}/api/auth/staff/login`,
                 { email, password },
                 { withCredentials: true }
             );
@@ -125,7 +125,7 @@ const StaffLogin = () => {
             };
 
             const { data } = await axios.post(
-                'http://localhost:5000/api/auth/first-login-password',
+                `${import.meta.env.VITE_API_URL}/api/auth/first-login-password`,
                 { newPassword },
                 config
             );

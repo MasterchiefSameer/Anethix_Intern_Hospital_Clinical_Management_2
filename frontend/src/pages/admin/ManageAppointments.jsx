@@ -81,8 +81,8 @@ const ManageAppointments = () => {
             };
 
             const [queueRes, doctorsRes] = await Promise.all([
-                axios.get('http://localhost:5000/api/appointments/queue/today', config),
-                axios.get('http://localhost:5000/api/doctor'),
+                axios.get(`${import.meta.env.VITE_API_URL}/api/appointments/queue/today`, config),
+                axios.get(`${import.meta.env.VITE_API_URL}/api/doctors`),
             ]);
 
             if (queueRes.data) {
@@ -123,7 +123,7 @@ const ManageAppointments = () => {
             };
 
             await axios.put(
-                `http://localhost:5000/api/appointments/${appointmentId}/status`,
+                `${import.meta.env.VITE_API_URL}/api/appointments/${appointmentId}/status`,
                 { status: newStatus },
                 config
             );
@@ -151,8 +151,7 @@ const ManageAppointments = () => {
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
             };
 
-            await axios.post(
-                'http://localhost:5000/api/appointments/walkin',
+            await axios.post(`${import.meta.env.VITE_API_URL}/api/appointments/walkin`,
                 walkInData,
                 config
             );
@@ -193,7 +192,7 @@ const ManageAppointments = () => {
             };
 
             await axios.put(
-                `http://localhost:5000/api/appointments/${rescheduleModal.appointmentId}/reschedule`,
+                `${import.meta.env.VITE_API_URL}/api/appointments/${rescheduleModal.appointmentId}/reschedule`,
                 {
                     date: rescheduleModal.newDate,
                     time: rescheduleModal.newTime,
@@ -613,15 +612,31 @@ const ManageAppointments = () => {
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                                        Time Slot
+                                        Time Slot *
                                     </label>
-                                    <input
-                                        type="text"
+                                    <select
                                         value={walkInData.time}
                                         onChange={(e) => setWalkInData({ ...walkInData, time: e.target.value })}
-                                        placeholder="10:30 AM"
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none"
-                                    />
+                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-[#00478d]"
+                                    >
+                                        {[
+                                            '09:00 AM',
+                                            '09:30 AM',
+                                            '10:00 AM',
+                                            '10:30 AM',
+                                            '11:00 AM',
+                                            '11:30 AM',
+                                            '01:00 PM',
+                                            '01:30 PM',
+                                            '02:00 PM',
+                                            '02:30 PM',
+                                            '03:00 PM'
+                                        ].map((slot) => (
+                                            <option key={slot} value={slot}>
+                                                {slot}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">

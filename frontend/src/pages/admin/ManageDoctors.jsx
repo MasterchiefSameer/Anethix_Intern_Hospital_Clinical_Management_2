@@ -72,7 +72,7 @@ const ManageDoctors = () => {
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
             };
 
-            const { data } = await axios.get('http://localhost:5000/api/admin/staff', config);
+            const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/staff`, config);
             if (data && Array.isArray(data)) {
                 setStaffList(data);
             }
@@ -129,7 +129,7 @@ const ManageDoctors = () => {
             };
 
             await axios.patch(
-                `http://localhost:5000/api/admin/staff/${staffId}/toggle-status`,
+                `${import.meta.env.VITE_API_URL}/api/admin/staff/${staffId}/toggle-status`,
                 {},
                 config
             );
@@ -159,7 +159,7 @@ const ManageDoctors = () => {
             };
 
             await axios.post(
-                `http://localhost:5000/api/admin/staff/${staffId}/reset-password`,
+                `${import.meta.env.VITE_API_URL}/api/admin/staff/${staffId}/reset-password`,
                 { temporaryPassword: tempPass },
                 config
             );
@@ -209,7 +209,7 @@ const ManageDoctors = () => {
             };
 
             const { data } = await axios.post(
-                'http://localhost:5000/api/admin/staff',
+                `${import.meta.env.VITE_API_URL}/api/admin/staff`,
                 formData,
                 config
             );
@@ -381,9 +381,9 @@ const ManageDoctors = () => {
                                             staff.role === 'Super Admin'
                                                 ? 'bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300'
                                                 : staff.role === 'Doctor'
-                                                ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300'
-                                                : 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300'
-                                        }`}>
+                                                    ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300'
+                                                    : 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300'
+                                            }`}>
                                             {staff.role}
                                         </span>
                                     </td>
@@ -442,7 +442,7 @@ const ManageDoctors = () => {
                                                     staff.isActive !== false
                                                         ? 'text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40'
                                                         : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
-                                                }`}
+                                                    }`}
                                                 title={staff.isActive !== false ? 'Deactivate Staff' : 'Activate Staff'}
                                             >
                                                 <Power size={15} />

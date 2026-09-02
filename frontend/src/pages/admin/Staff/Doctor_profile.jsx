@@ -100,8 +100,8 @@ const DoctorProfile = () => {
             };
 
             const endpoint = targetId
-                ? `http://localhost:5000/api/user/profile/${targetId}`
-                : 'http://localhost:5000/api/user/profile';
+                ? `${import.meta.env.VITE_API_URL}/api/user/profile/${targetId}`
+                : `${import.meta.env.VITE_API_URL}/api/user/profile`;
 
             const { data } = await axios.get(endpoint, config);
 
@@ -205,8 +205,8 @@ const DoctorProfile = () => {
             };
 
             const endpoint = targetId
-                ? `http://localhost:5000/api/user/profile/${targetId}`
-                : 'http://localhost:5000/api/user/profile';
+                ? `${import.meta.env.VITE_API_URL}/api/user/profile/${targetId}`
+                : `${import.meta.env.VITE_API_URL}/api/user/profile`;
 
             const payload = {
                 ...profile,
@@ -369,8 +369,8 @@ const DoctorProfile = () => {
                 {statusMessage.text && (
                     <div
                         className={`p-4 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2.5 transition-all ${statusMessage.type === 'success'
-                                ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                                : 'bg-red-50 dark:bg-red-950/50 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                            : 'bg-red-50 dark:bg-red-950/50 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800'
                             }`}
                     >
                         {statusMessage.type === 'success' ? (
@@ -405,8 +405,8 @@ const DoctorProfile = () => {
                                             onClick={() => toggleDay(day)}
                                             disabled={!isEditing}
                                             className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${isSelected
-                                                    ? 'bg-[#006a63] text-white shadow-sm ring-2 ring-[#006a63]/20'
-                                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 opacity-60'
+                                                ? 'bg-[#006a63] text-white shadow-sm ring-2 ring-[#006a63]/20'
+                                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 opacity-60'
                                                 } ${isEditing ? 'cursor-pointer hover:opacity-90' : 'cursor-default'}`}
                                         >
                                             {isSelected && <Check size={14} />}

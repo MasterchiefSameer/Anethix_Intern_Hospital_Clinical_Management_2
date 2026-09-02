@@ -69,8 +69,8 @@ const PatientProfile = () => {
 
             // Call /api/user/profile/:id (or /api/user/profile)
             const endpoint = targetId
-                ? `http://localhost:5000/api/user/profile/${targetId}`
-                : 'http://localhost:5000/api/user/profile';
+                ? `${import.meta.env.VITE_API_URL}/api/user/profile/${targetId}`
+                : `${import.meta.env.VITE_API_URL}/api/user/profile`;
 
             const { data } = await axios.get(endpoint, config);
 
@@ -151,8 +151,8 @@ const PatientProfile = () => {
             };
 
             const endpoint = targetId
-                ? `http://localhost:5000/api/user/profile/${targetId}`
-                : 'http://localhost:5000/api/user/profile';
+                ? `${import.meta.env.VITE_API_URL}/api/user/profile/${targetId}`
+                : `${import.meta.env.VITE_API_URL}/api/user/profile`;
 
             // 1. Send update request to Backend API (Saves directly to MongoDB Database)
             const { data } = await axios.put(endpoint, profile, config);
@@ -322,7 +322,7 @@ const PatientProfile = () => {
                             statusMessage.type === 'success'
                                 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
                                 : 'bg-red-50 dark:bg-red-950/50 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800'
-                        }`}
+                            }`}
                     >
                         {statusMessage.type === 'success' ? (
                             <CheckCircle2 size={18} className="text-emerald-500" />

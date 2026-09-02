@@ -100,6 +100,16 @@ export const createAppointment = async (req, res, next) => {
         });
 
         const createdAppointment = await appointment.save();
+
+        // 🚀 Broadcast real-time slot update via Socket.io
+        if (req.io) {
+            req.io.emit('slotUpdated', {
+                doctorId: doctor,
+                date: new Date(date).toISOString().split('T')[0],
+                time,
+            });
+        }
+
         res.status(201).json(createdAppointment);
     } catch (error) {
         next(error);
@@ -172,6 +182,16 @@ export const bookWalkInAppointment = async (req, res, next) => {
         });
 
         const created = await appointment.save();
+
+        // 🚀 Broadcast real-time slot update via Socket.io
+        if (req.io) {
+            req.io.emit('slotUpdated', {
+                doctorId: doctor,
+                date: new Date(targetDate).toISOString().split('T')[0],
+                time,
+            });
+        }
+
         const populated = await Appointment.findById(created._id)
             .populate('doctor', 'name specialty fees')
             .populate('patient', 'name phone email');
@@ -197,9 +217,10 @@ export const getTodayQueue = async (req, res, next) => {
         };
 
         // If logged in as Doctor, only show their own appointments
-        if (req.user.role === 'Doctor') {
+        if (req.user && req.user.role === 'Doctor') {
+            const email = req.user.email ? req.user.email.toLowerCase() : '';
             const doc = await Doctor.findOne({
-                $or: [{ user: req.user._id }, { email: req.user.email.toLowerCase() }],
+                $or: [{ user: req.user._id }, { email }],
             });
             if (doc) {
                 filter.doctor = doc._id;
@@ -209,20 +230,27 @@ export const getTodayQueue = async (req, res, next) => {
         const queue = await Appointment.find(filter)
             .populate('patient', 'name email phone bloodGroup gender')
             .populate('doctor', 'name specialty fees')
-            .sort({ tokenNumber: 1, createdAt: 1 });
+            .sort({ tokenNumber: 1, createdAt: 1 })
+            .lean()
+            .exec();
+
+        const safeQueue = queue || [];
 
         // Calculate queue metrics
-        const totalToday = queue.length;
-        const checkedIn = queue.filter((a) => a.status === 'Checked-In').length;
-        const scheduled = queue.filter((a) => a.status === 'Scheduled').length;
-        const completed = queue.filter((a) => a.status === 'Completed').length;
-        const noShow = queue.filter((a) => a.status === 'No-Show').length;
+        const totalToday = safeQueue.length;
+        const checkedIn = safeQueue.filter((a) => a.status === 'Checked-In').length;
+        const scheduled = safeQueue.filter((a) => a.status === 'Scheduled').length;
+        const completed = safeQueue.filter((a) => a.status === 'Completed').length;
+        const noShow = safeQueue.filter((a) => a.status === 'No-Show').length;
 
         // Active doctors with appointments today
-        const activeDoctorIds = [...new Set(queue.map((a) => a.doctor?._id?.toString()).filter(Boolean))];
+        const activeDoctorIds = [...new Set(safeQueue.map((a) => {
+            if (!a.doctor) return null;
+            return a.doctor._id ? a.doctor._id.toString() : a.doctor.toString();
+        }).filter(Boolean))];
 
         res.status(200).json({
-            queue,
+            queue: safeQueue,
             stats: {
                 totalToday,
                 pendingQueue: scheduled + checkedIn,
@@ -234,6 +262,7 @@ export const getTodayQueue = async (req, res, next) => {
             },
         });
     } catch (error) {
+        console.error('Error fetching today queue:', error);
         next(error);
     }
 };
@@ -299,6 +328,16 @@ export const updateAppointmentStatus = async (req, res, next) => {
 
         appointment.status = status;
         const updated = await appointment.save();
+
+        // 🚀 Broadcast real-time slot update via Socket.io
+        if (req.io && updated.doctor) {
+            req.io.emit('slotUpdated', {
+                doctorId: updated.doctor._id || updated.doctor,
+                date: new Date(updated.date).toISOString().split('T')[0],
+                time: updated.time,
+            });
+        }
+
         res.json(updated);
     } catch (error) {
         next(error);
@@ -326,6 +365,16 @@ export const rescheduleAppointment = async (req, res, next) => {
         appointment.time = time;
         appointment.status = 'Scheduled'; // Reset status back to Scheduled
         const updated = await appointment.save();
+
+        // 🚀 Broadcast real-time slot update via Socket.io
+        if (req.io && updated.doctor) {
+            req.io.emit('slotUpdated', {
+                doctorId: updated.doctor._id || updated.doctor,
+                date: new Date(updated.date).toISOString().split('T')[0],
+                time: updated.time,
+            });
+        }
+
         res.json(updated);
     } catch (error) {
         next(error);

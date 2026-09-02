@@ -1,9 +1,10 @@
 /**
- * This file is the main entry point for the backend server.
- * It sets up the Express application, configures middleware (CORS, JSON parsing, cookies),
- * connects to the database, registers API routes, and starts the server.
+ * Backend Entry Point with Socket.io WebSockets Integration.
+ * Configures Express app, HTTP server, CORS, Cookie Parser, MongoDB, and Socket.io.
  */
 import express from 'express';
+import http from 'http';
+import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -16,10 +17,32 @@ dotenv.config();
 connectDB();
 
 const app = express();
+const server = http.createServer(app);
+
+// Socket.io Server Setup
+const io = new Server(server, {
+    cors: {
+        origin: 'http://localhost:5173',
+        credentials: true,
+    },
+});
+
+// Attach io instance to req object for controller broadcasting
+app.use((req, res, next) => {
+    req.io = io;
+    next();
+});
+
+io.on('connection', (socket) => {
+    console.log('⚡ Socket.io client connected:', socket.id);
+    socket.on('disconnect', () => {
+        console.log('❌ Socket.io client disconnected:', socket.id);
+    });
+});
 
 // Middleware
 app.use(cors({
-    origin: 'http://localhost:5173', // Vite default port
+    origin: 'http://localhost:5173',
     credentials: true,
 }));
 app.use(express.json());
@@ -27,10 +50,10 @@ app.use(cookieParser());
 
 // Base Route
 app.get('/', (req, res) => {
-    res.send('API is running...');
+    res.send('MedTrust Hospital API is running...');
 });
 
-// Import Routes (To be created)
+// Import Routes
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import doctorRoutes from './routes/doctorRoutes.js';
@@ -48,13 +71,13 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Error Middleware (To be created)
+// Error Middleware
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 app.use(notFound);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 });

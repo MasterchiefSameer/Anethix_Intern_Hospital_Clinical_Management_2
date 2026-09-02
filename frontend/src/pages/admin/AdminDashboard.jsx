@@ -43,7 +43,7 @@ const AdminDashboard = () => {
                     withCredentials: true,
                     headers: token ? { Authorization: `Bearer ${token}` } : {},
                 };
-                const { data } = await axios.get('http://localhost:5000/api/admin/stats', config);
+                const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/stats`, config);
                 if (data) {
                     setStats(data);
                 }
@@ -66,8 +66,8 @@ const AdminDashboard = () => {
                         {role === 'Super Admin'
                             ? 'Executive Administration Portal'
                             : role === 'Receptionist'
-                            ? 'Front Desk Operations Console'
-                            : 'Medical Practitioner Workspace'}
+                                ? 'Front Desk Operations Console'
+                                : 'Medical Practitioner Workspace'}
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1">
                         Live hospital analytics, staff monitoring, and patient appointment traffic.

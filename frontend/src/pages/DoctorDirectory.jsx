@@ -33,7 +33,7 @@ import { toast } from 'sonner';
 ----------------------------------------------------------------------------------------
 Yeh dummy data pehle frontend UI testing aur prototype design ke liye use hota tha.
 Ab humne isko comment out kar diya hai aur neechay useEffect mein live Backend API 
-(http://localhost:5000/api/doctors) se fetch call laga di hai.
+(${import.meta.env.VITE_API_URL}/api/doctors) se fetch call laga di hai.
 ========================================================================================
 export const hardcodedDummyDoctors = [
     {
@@ -207,7 +207,7 @@ const DoctorDirectory = () => {
     const fetchDoctorsFromBackend = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await axios.get('http://localhost:5000/api/doctors');
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/doctors`);
             const data = Array.isArray(response.data) ? response.data : response.data.doctors || [];
 
             if (data && data.length > 0) {
@@ -224,8 +224,8 @@ const DoctorDirectory = () => {
                     nextAvailable: (doc.availableDays && doc.availableDays.length > 0) ? doc.availableDays[0] : 'Today',
                     availableToday: doc.availableDays ? doc.availableDays.includes('Monday') || doc.availableDays.includes('Tuesday') || true : true,
                     fees: doc.fees || 600,
-                    image: doc.image || (doc.gender === 'Female' 
-                        ? 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80' 
+                    image: doc.image || (doc.gender === 'Female'
+                        ? 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80'
                         : 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80'),
                     bio: doc.about || doc.bio || 'Experienced hospital practitioner committed to providing evidence-based clinical care and preventive health.',
                     languages: doc.languages || 'English, Hindi',
@@ -313,7 +313,7 @@ const DoctorDirectory = () => {
     return (
         <div className="min-h-screen bg-[#f7f9fb] dark:bg-slate-950 text-slate-900 dark:text-slate-100 py-10 px-4 sm:px-6 transition-colors duration-200">
             <div className="max-w-7xl mx-auto space-y-6">
-                
+
                 {/* 🟢/🟡 LIVE API vs FALLBACK STATUS BANNER */}
                 {/* <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
                     <div className="flex items-center gap-3">
@@ -326,7 +326,7 @@ const DoctorDirectory = () => {
                                 <span>Data Source: {isUsingFallback ? 'Demo Fallback Data' : 'Live MongoDB API'}</span>
                             </p>
                             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                                {dataSourceText} • Endpoint: <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[10px] text-[#00478d] dark:text-blue-400">GET http://localhost:5000/api/doctors</code>
+                                {dataSourceText} • Endpoint: <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-[10px] text-[#00478d] dark:text-blue-400">GET ${import.meta.env.VITE_API_URL}/api/doctors</code>
                             </p>
                         </div>
                     </div>

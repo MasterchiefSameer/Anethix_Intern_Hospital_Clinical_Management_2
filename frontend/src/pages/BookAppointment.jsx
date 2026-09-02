@@ -25,6 +25,7 @@ import {
     AlertCircle
 } from 'lucide-react';
 import axios from 'axios';
+import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import { allDoctorsData } from './DoctorDirectory';
@@ -84,7 +85,7 @@ const BookAppointment = () => {
     useEffect(() => {
         const fetchDoctors = async () => {
             try {
-                const { data } = await axios.get('http://localhost:5000/api/doctors');
+                const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/doctors`);
                 const list = Array.isArray(data) ? data : data.doctors || [];
                 if (list.length > 0) {
                     setDoctorsList(list);
@@ -109,9 +110,7 @@ const BookAppointment = () => {
     const fetchSlotAvailability = useCallback(async () => {
         if (!selectedDoctor?._id || !selectedDate) return;
         try {
-            const { data } = await axios.get(
-                `http://localhost:5000/api/appointments/slots-availability?doctorId=${selectedDoctor._id}&date=${selectedDate}`
-            );
+            const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/appointments/slots-availability?doctorId=${selectedDoctor._id}&date=${selectedDate}`);
             if (data?.slotCounts) {
                 setSlotAvailability(data.slotCounts);
             }
@@ -122,7 +121,21 @@ const BookAppointment = () => {
 
     useEffect(() => {
         fetchSlotAvailability();
-    }, [fetchSlotAvailability]);
+
+        // 🚀 Real-time WebSocket listener for live slot capacity updates
+        const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
+        socket.on('slotUpdated', (data) => {
+            if (!selectedDoctor?._id || !selectedDate) return;
+            const targetDocId = data.doctorId?._id || data.doctorId;
+            if (targetDocId === selectedDoctor._id && data.date === selectedDate) {
+                fetchSlotAvailability();
+            }
+        });
+
+        return () => {
+            socket.disconnect();
+        };
+    }, [fetchSlotAvailability, selectedDoctor, selectedDate]);
 
     const handleNextStep = () => {
         if (currentStep === 1 && !selectedDepartment) {
@@ -172,7 +185,7 @@ const BookAppointment = () => {
                 reason: patientDetails.reason,
             };
 
-            await axios.post('http://localhost:5000/api/appointments', payload, config);
+            await axios.post(`${import.meta.env.VITE_API_URL}/api/appointments`, payload, config);
 
             toast.success('Appointment Confirmed & Scheduled!', {
                 description: `Confirmed with ${selectedDoctor?.name} on ${selectedDate} at ${selectedTimeSlot}.`,
@@ -236,9 +249,9 @@ const BookAppointment = () => {
                                             isActive
                                                 ? 'bg-[#00478d] dark:bg-blue-600 text-white ring-4 ring-blue-100 dark:ring-blue-900/50'
                                                 : isCompleted
-                                                ? 'bg-emerald-500 text-white'
-                                                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700'
-                                        }`}
+                                                    ? 'bg-emerald-500 text-white'
+                                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700'
+                                            }`}
                                     >
                                         {isCompleted ? <Check size={16} /> : item.step}
                                     </div>
@@ -247,9 +260,9 @@ const BookAppointment = () => {
                                             isActive
                                                 ? 'text-[#00478d] dark:text-blue-400 font-bold'
                                                 : isCompleted
-                                                ? 'text-slate-700 dark:text-slate-300'
-                                                : 'text-slate-400 dark:text-slate-500'
-                                        }`}
+                                                    ? 'text-slate-700 dark:text-slate-300'
+                                                    : 'text-slate-400 dark:text-slate-500'
+                                            }`}
                                     >
                                         {item.label}
                                     </span>
@@ -260,7 +273,7 @@ const BookAppointment = () => {
                                             currentStep > idx + 1
                                                 ? 'bg-[#00478d] dark:bg-blue-600'
                                                 : 'bg-slate-200 dark:bg-slate-800'
-                                        }`}
+                                            }`}
                                     />
                                 )}
                             </React.Fragment>
@@ -287,7 +300,7 @@ const BookAppointment = () => {
                                         selectedDepartment === dept.id
                                             ? 'border-[#00478d] dark:border-blue-500 bg-blue-50/50 dark:bg-blue-950/40 text-[#00478d] dark:text-blue-300 font-semibold shadow-sm'
                                             : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 text-slate-700 dark:text-slate-300'
-                                    }`}
+                                        }`}
                                 >
                                     <span className="text-sm">{dept.name}</span>
                                     {selectedDepartment === dept.id && (
@@ -369,9 +382,9 @@ const BookAppointment = () => {
                                                         isFull
                                                             ? 'bg-slate-100 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 text-slate-400 cursor-not-allowed opacity-50'
                                                             : isSelected
-                                                            ? 'bg-[#00478d] dark:bg-blue-600 border-[#00478d] dark:border-blue-600 text-white shadow-sm'
-                                                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-300'
-                                                    }`}
+                                                                ? 'bg-[#00478d] dark:bg-blue-600 border-[#00478d] dark:border-blue-600 text-white shadow-sm'
+                                                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                                                        }`}
                                                 >
                                                     <span>{slot}</span>
                                                     <span className="text-[9px] font-normal opacity-80">

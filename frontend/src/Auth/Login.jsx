@@ -60,7 +60,7 @@ const Login = ({ onError, onSuccess }) => {
         try {
             // Attempt backend API login first
             const { data } = await axios.post(
-                'http://localhost:5000/api/auth/login',
+                `${import.meta.env.VITE_API_URL}/api/auth/login`,
                 {
                     email: loginData.email,
                     password: loginData.password,

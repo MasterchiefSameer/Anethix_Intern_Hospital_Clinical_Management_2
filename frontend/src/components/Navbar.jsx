@@ -30,7 +30,12 @@ const Navbar = () => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
 
     const isActive = (path) => location.pathname === path;
-    
+
+    // Normalize user object structure (handling login response nesting: { rest, token })
+    const currentUser = user?.rest || user;
+    const userRole = currentUser?.role || 'Patient';
+    const userName = currentUser?.name || 'User';
+    const userEmail = currentUser?.email || '';
 
     const handleLogout = () => {
         logout();
@@ -47,11 +52,9 @@ const Navbar = () => {
                 description: 'Please sign in or register to schedule an OPD slot.',
             });
             navigate('/login', { state: { from: { pathname: '/doctors' } } });
-        } else if (user.role === 'Receptionist') {
+        } else if (userRole === 'Receptionist' || userRole === 'Doctor') {
             navigate('/admin/appointments');
-        } else if (user.role === 'Doctor') {
-            navigate('/admin/appointments');
-        } else if (user.role === 'Super Admin') {
+        } else if (userRole === 'Super Admin') {
             navigate('/admin');
         } else {
             navigate('/doctors');
@@ -61,9 +64,9 @@ const Navbar = () => {
     // Dynamic CTA button label based on role
     const getCtaLabel = () => {
         if (!user) return 'Book Appointment';
-        if (user.role === 'Receptionist') return 'Walk-In Booking';
-        if (user.role === 'Doctor') return 'My OPD Schedule';
-        if (user.role === 'Super Admin') return 'Admin Console';
+        if (userRole === 'Receptionist') return 'Walk-In Booking';
+        if (userRole === 'Doctor') return 'My OPD Schedule';
+        if (userRole === 'Super Admin') return 'Admin Console';
         return 'Book Appointment';
     };
 
@@ -102,7 +105,7 @@ const Navbar = () => {
                     >
                         Departments
                     </Link>
-                    {(!user || user.role === 'Patient') && (
+                    {(!user || userRole === 'Patient') && (
                         <Link
                             to="/doctors"
                             className={`text-sm font-medium transition-colors ${
@@ -114,7 +117,7 @@ const Navbar = () => {
                             Find Doctors
                         </Link>
                     )}
-                    {user?.role === 'Super Admin' && (
+                    {userRole === 'Super Admin' && (
                         <Link
                             to="/admin/doctors"
                             className={`text-sm font-medium transition-colors ${
@@ -126,7 +129,7 @@ const Navbar = () => {
                             Manage Doctors
                         </Link>
                     )}
-                    {user?.role === 'Receptionist' && (
+                    {userRole === 'Receptionist' && (
                         <Link
                             to="/admin/appointments"
                             className={`text-sm font-medium transition-colors ${
@@ -160,14 +163,14 @@ const Navbar = () => {
                     </Link>
                     {user && (
                         <Link
-                            to={user.role === 'Patient' ? '/dashboard' : '/admin'}
+                            to={userRole === 'Patient' ? '/dashboard' : '/admin'}
                             className={`text-sm font-medium transition-colors ${
                                 isActive('/dashboard') || isActive('/admin')
                                     ? 'text-[#00478d] dark:text-blue-400 border-b-2 border-[#00478d] dark:border-blue-400 pb-1 font-semibold'
                                     : 'text-slate-600 dark:text-slate-300 hover:text-[#00478d] dark:hover:text-blue-400'
                             }`}
                         >
-                            {user.role === 'Patient' ? 'Dashboard' : `${user.role} Portal`}
+                            {userRole === 'Patient' ? 'Dashboard' : `${userRole} Portal`}
                         </Link>
                     )}
                 </nav>
@@ -208,7 +211,7 @@ const Navbar = () => {
                                 className="flex items-center gap-2 p-1 rounded-full border border-slate-200 dark:border-slate-700 hover:border-[#00478d] dark:hover:border-blue-400 transition-all focus:outline-none"
                             >
                                 <div className="w-8 h-8 rounded-full bg-[#00478d] dark:bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">
-                                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                                    {userName ? userName.charAt(0).toUpperCase() : 'U'}
                                 </div>
                             </button>
 
@@ -224,26 +227,26 @@ const Navbar = () => {
                                 <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
                                     <div className="flex items-center justify-between mb-1">
                                         <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
-                                            {user.name || 'Staff User'}
+                                            {userName}
                                         </p>
-                                        {user.bloodGroup && (
+                                        {currentUser?.bloodGroup && (
                                             <span className="text-[10px] bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 font-extrabold px-1.5 py-0.5 rounded">
-                                                {user.bloodGroup}
+                                                {currentUser.bloodGroup}
                                             </span>
                                         )}
                                     </div>
                                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                                        {user.email}
+                                        {userEmail}
                                     </p>
                                     <span className="inline-block mt-1.5 text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-[#00478d] dark:text-blue-400 border border-blue-100 dark:border-blue-900">
-                                        {user.role || 'Patient'}
+                                        {userRole}
                                     </span>
                                 </div>
 
                                 {/* Menu Links Based on Role */}
                                 <div className="py-2 space-y-0.5">
                                     {/* Receptionist Dropdown */}
-                                    {user.role === 'Receptionist' && (
+                                    {userRole === 'Receptionist' && (
                                         <>
                                             <Link
                                                 to="/admin"
@@ -273,7 +276,7 @@ const Navbar = () => {
                                     )}
 
                                     {/* Doctor Dropdown */}
-                                    {user.role === 'Doctor' && (
+                                    {userRole === 'Doctor' && (
                                         <>
                                             <Link
                                                 to="/admin/appointments"
@@ -295,7 +298,7 @@ const Navbar = () => {
                                     )}
 
                                     {/* Super Admin Dropdown */}
-                                    {user.role === 'Super Admin' && (
+                                    {userRole === 'Super Admin' && (
                                         <>
                                             <Link
                                                 to="/admin"
@@ -317,7 +320,7 @@ const Navbar = () => {
                                     )}
 
                                     {/* Patient Dropdown (Default) */}
-                                    {(!user.role || user.role === 'Patient') && (
+                                    {userRole === 'Patient' && (
                                         <>
                                             <Link
                                                 to="/dashboard"
