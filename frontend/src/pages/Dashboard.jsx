@@ -451,8 +451,8 @@ const Dashboard = () => {
                                                 <td className="py-4 px-6 font-medium">
                                                     <p
                                                         className={`font-bold ${isCancelled
-                                                                ? 'text-slate-400 line-through'
-                                                                : 'text-slate-900 dark:text-white'
+                                                            ? 'text-slate-400 line-through'
+                                                            : 'text-slate-900 dark:text-white'
                                                             }`}
                                                     >
                                                         {app.date}
@@ -576,8 +576,8 @@ const Dashboard = () => {
                                 <button
                                     onClick={() => setCurrentPage(1)}
                                     className={`w-8 h-8 rounded-lg font-bold flex items-center justify-center ${currentPage === 1
-                                            ? 'bg-[#00478d] text-white shadow-sm'
-                                            : 'border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                        ? 'bg-[#00478d] text-white shadow-sm'
+                                        : 'border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
                                         }`}
                                 >
                                     1
@@ -653,10 +653,10 @@ const Dashboard = () => {
                                             disabled={isFull}
                                             onClick={() => setRescheduleTimeSlot(slot)}
                                             className={`py-2 px-2.5 rounded-xl border text-xs font-semibold transition-all flex flex-col items-center justify-center ${isFull
-                                                    ? 'bg-slate-100 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 text-slate-400 cursor-not-allowed opacity-50'
-                                                    : isSelected
-                                                        ? 'bg-[#00478d] dark:bg-blue-600 border-[#00478d] text-white shadow-sm'
-                                                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                                                ? 'bg-slate-100 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 text-slate-400 cursor-not-allowed opacity-50'
+                                                : isSelected
+                                                    ? 'bg-[#00478d] dark:bg-blue-600 border-[#00478d] text-white shadow-sm'
+                                                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-300'
                                                 }`}
                                         >
                                             <span>{slot}</span>

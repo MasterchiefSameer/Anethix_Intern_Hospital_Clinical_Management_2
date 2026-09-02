@@ -245,23 +245,21 @@ const BookAppointment = () => {
                             <React.Fragment key={item.step}>
                                 <div className="flex flex-col items-center">
                                     <div
-                                        className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all shadow-sm ${
-                                            isActive
-                                                ? 'bg-[#00478d] dark:bg-blue-600 text-white ring-4 ring-blue-100 dark:ring-blue-900/50'
-                                                : isCompleted
-                                                    ? 'bg-emerald-500 text-white'
-                                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700'
+                                        className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all shadow-sm ${isActive
+                                            ? 'bg-[#00478d] dark:bg-blue-600 text-white ring-4 ring-blue-100 dark:ring-blue-900/50'
+                                            : isCompleted
+                                                ? 'bg-emerald-500 text-white'
+                                                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700'
                                             }`}
                                     >
                                         {isCompleted ? <Check size={16} /> : item.step}
                                     </div>
                                     <span
-                                        className={`text-[11px] font-semibold mt-1.5 ${
-                                            isActive
-                                                ? 'text-[#00478d] dark:text-blue-400 font-bold'
-                                                : isCompleted
-                                                    ? 'text-slate-700 dark:text-slate-300'
-                                                    : 'text-slate-400 dark:text-slate-500'
+                                        className={`text-[11px] font-semibold mt-1.5 ${isActive
+                                            ? 'text-[#00478d] dark:text-blue-400 font-bold'
+                                            : isCompleted
+                                                ? 'text-slate-700 dark:text-slate-300'
+                                                : 'text-slate-400 dark:text-slate-500'
                                             }`}
                                     >
                                         {item.label}
@@ -269,10 +267,9 @@ const BookAppointment = () => {
                                 </div>
                                 {idx < 3 && (
                                     <div
-                                        className={`w-14 sm:w-20 h-0.5 mx-2 -mt-5 transition-colors ${
-                                            currentStep > idx + 1
-                                                ? 'bg-[#00478d] dark:bg-blue-600'
-                                                : 'bg-slate-200 dark:bg-slate-800'
+                                        className={`w-14 sm:w-20 h-0.5 mx-2 -mt-5 transition-colors ${currentStep > idx + 1
+                                            ? 'bg-[#00478d] dark:bg-blue-600'
+                                            : 'bg-slate-200 dark:bg-slate-800'
                                             }`}
                                     />
                                 )}
@@ -296,10 +293,9 @@ const BookAppointment = () => {
                                     key={dept.id}
                                     type="button"
                                     onClick={() => setSelectedDepartment(dept.id)}
-                                    className={`p-4 rounded-xl border text-left transition-all flex items-center justify-between ${
-                                        selectedDepartment === dept.id
-                                            ? 'border-[#00478d] dark:border-blue-500 bg-blue-50/50 dark:bg-blue-950/40 text-[#00478d] dark:text-blue-300 font-semibold shadow-sm'
-                                            : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 text-slate-700 dark:text-slate-300'
+                                    className={`p-4 rounded-xl border text-left transition-all flex items-center justify-between ${selectedDepartment === dept.id
+                                        ? 'border-[#00478d] dark:border-blue-500 bg-blue-50/50 dark:bg-blue-950/40 text-[#00478d] dark:text-blue-300 font-semibold shadow-sm'
+                                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 text-slate-700 dark:text-slate-300'
                                         }`}
                                 >
                                     <span className="text-sm">{dept.name}</span>
@@ -378,12 +374,11 @@ const BookAppointment = () => {
                                                     type="button"
                                                     disabled={isFull}
                                                     onClick={() => setSelectedTimeSlot(slot)}
-                                                    className={`py-3 px-3 rounded-xl border text-xs font-semibold transition-all relative flex flex-col items-center justify-center gap-0.5 ${
-                                                        isFull
-                                                            ? 'bg-slate-100 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 text-slate-400 cursor-not-allowed opacity-50'
-                                                            : isSelected
-                                                                ? 'bg-[#00478d] dark:bg-blue-600 border-[#00478d] dark:border-blue-600 text-white shadow-sm'
-                                                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                                                    className={`py-3 px-3 rounded-xl border text-xs font-semibold transition-all relative flex flex-col items-center justify-center gap-0.5 ${isFull
+                                                        ? 'bg-slate-100 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 text-slate-400 cursor-not-allowed opacity-50'
+                                                        : isSelected
+                                                            ? 'bg-[#00478d] dark:bg-blue-600 border-[#00478d] dark:border-blue-600 text-white shadow-sm'
+                                                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-300'
                                                         }`}
                                                 >
                                                     <span>{slot}</span>

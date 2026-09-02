@@ -379,10 +379,10 @@ const ManageDoctors = () => {
                                     <td className="py-4 px-6">
                                         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
                                             staff.role === 'Super Admin'
-                                                ? 'bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300'
-                                                : staff.role === 'Doctor'
-                                                    ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300'
-                                                    : 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300'
+                                            ? 'bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300'
+                                            : staff.role === 'Doctor'
+                                                ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300'
+                                                : 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300'
                                             }`}>
                                             {staff.role}
                                         </span>
@@ -440,8 +440,8 @@ const ManageDoctors = () => {
                                                 onClick={() => handleToggleStatus(staff._id, staff.isActive !== false, staff.name)}
                                                 className={`p-1.5 rounded-lg transition-colors ${
                                                     staff.isActive !== false
-                                                        ? 'text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40'
-                                                        : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
+                                                    ? 'text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40'
+                                                    : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
                                                     }`}
                                                 title={staff.isActive !== false ? 'Deactivate Staff' : 'Activate Staff'}
                                             >
