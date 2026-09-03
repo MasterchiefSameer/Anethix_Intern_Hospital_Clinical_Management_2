@@ -192,6 +192,21 @@ const Dashboard = () => {
         }
     }, [user, todayStr, API_BASE_URL]);
 
+    // Fetch slot availability whenever reschedule modal date changes
+    const fetchRescheduleSlotAvailability = useCallback(async () => {
+        if (!rescheduleModalApp?.doctor?._id || !rescheduleDate) return;
+        try {
+            const { data } = await axios.get(
+                `${API_BASE_URL}/api/appointments/slots-availability?doctorId=${rescheduleModalApp.doctor._id}&date=${rescheduleDate}`
+            );
+            if (data?.slotCounts) {
+                setRescheduleSlotCounts(data.slotCounts);
+            }
+        } catch (err) {
+            console.warn('Could not fetch slot availability for reschedule modal:', err);
+        }
+    }, [rescheduleModalApp, rescheduleDate, API_BASE_URL]);
+
     useEffect(() => {
         fetchMyAppointments();
 
@@ -209,20 +224,6 @@ const Dashboard = () => {
         };
     }, [fetchMyAppointments, rescheduleModalApp, fetchRescheduleSlotAvailability, API_BASE_URL]);
 
-    // Fetch slot availability whenever reschedule modal date changes
-    const fetchRescheduleSlotAvailability = useCallback(async () => {
-        if (!rescheduleModalApp?.doctor?._id || !rescheduleDate) return;
-        try {
-            const { data } = await axios.get(
-                `${API_BASE_URL}/api/appointments/slots-availability?doctorId=${rescheduleModalApp.doctor._id}&date=${rescheduleDate}`
-            );
-            if (data?.slotCounts) {
-                setRescheduleSlotCounts(data.slotCounts);
-            }
-        } catch (err) {
-            console.warn('Could not fetch slot availability for reschedule modal:', err);
-        }
-    }, [rescheduleModalApp, rescheduleDate, API_BASE_URL]);
 
     useEffect(() => {
         if (rescheduleModalApp) {
