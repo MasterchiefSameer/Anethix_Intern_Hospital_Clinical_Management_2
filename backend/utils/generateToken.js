@@ -11,8 +11,8 @@ const generateToken = (res, userId) => {
 
     res.cookie('jwt', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Must be 'none' for cross-domain on Vercel
+        secure: true, // Always true for cross-domain HTTPS
+        sameSite: 'none', // Always 'none' for Vercel <-> Render
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 

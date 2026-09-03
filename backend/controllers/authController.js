@@ -189,8 +189,8 @@ const registerUser = async (req, res, next) => {
 const logoutUser = (req, res) => {
     res.cookie('jwt', '', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        secure: true,
+        sameSite: 'none',
         expires: new Date(0),
     });
     res.status(200).json({ message: 'User logged out successfully' });
@@ -206,7 +206,11 @@ const google = async (req, res, next) => {
             const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
             const { password: pass, ...rest } = user._doc;
             res
-                .cookie('access_token', token, { httpOnly: true })
+                .cookie('access_token', token, { 
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: 'none'
+                })
                 .status(200)
                 .json(rest);
         } else {
@@ -231,7 +235,11 @@ const google = async (req, res, next) => {
             const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET);
             const { password: pass, ...rest } = newUser._doc;
             res
-                .cookie('access_token', token, { httpOnly: true })
+                .cookie('access_token', token, { 
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+                })
                 .status(200)
                 .json(rest);
         }
