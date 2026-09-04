@@ -9,6 +9,8 @@ import AdminLayout from './components/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ManageAppointments from './pages/admin/ManageAppointments';
 import ManageDoctors from './pages/admin/ManageDoctors';
+import ManagePatients from './pages/admin/ManagePatients';
+import ManageInquiries from './pages/admin/ManageInquiries';
 import PatientProfile from './pages/Patient_Profile';
 import About from './components/About';
 import Contact from './pages/Contact';
@@ -88,20 +90,15 @@ function App() {
                   />
 
                   {/* Admin & Staff Portal Routes (Strict RBAC Protected) */}
-                  <Route
-                    path="/admin"
-                    element={
-                      <ProtectedRoute allowedRoles={['Super Admin', 'Receptionist', 'Doctor']}>
-                        <AdminLayout />
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route index element={<AdminDashboard />} />
-                    <Route path="appointments" element={<ManageAppointments />} />
-                    <Route path="doctors" element={<ManageDoctors />} />
-                    <Route path="doctor-profile" element={<DoctorProfile />} />
-                    <Route path="receptionist-profile" element={<ReceptionistProfile />} />
-                  </Route>
+                    <Route path="/admin" element={<ProtectedRoute allowedRoles={['Super Admin', 'Receptionist', 'Doctor']}><AdminLayout /></ProtectedRoute>}>
+                      <Route index element={<AdminDashboard />} />
+                      <Route path="appointments" element={<ManageAppointments />} />
+                      <Route path="doctors" element={<ManageDoctors />} />
+                      <Route path="patients" element={<ManagePatients />} />
+                      <Route path="inquiries" element={<ManageInquiries />} />
+                      <Route path="doctor-profile" element={<DoctorProfile />} />
+                      <Route path="receptionist-profile" element={<ReceptionistProfile />} />
+                    </Route>
                 </Routes>
               </main>
               <Footer />

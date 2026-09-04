@@ -3,7 +3,7 @@
  * Features 24/7 Emergency & WhatsApp bar, OPD Inquiry form with Subject dropdown,
  * Main Campus & Regional Centers, Google Maps campus view, and full Light/Dark mode support.
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     PhoneCall,
     Mail,
@@ -18,6 +18,7 @@ import {
     Map as MapIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
+import axios from 'axios';
 
 const Contact = () => {
     const [formData, setFormData] = useState({
@@ -26,16 +27,30 @@ const Contact = () => {
         email: '',
         subject: 'Appointment Inquiry',
         department: 'General Medicine',
+        relatedDoctor: '',
         city: 'New Delhi',
         message: '',
     });
+    const [doctors, setDoctors] = useState([]);
     const [submitted, setSubmitted] = useState(false);
+
+    useEffect(() => {
+        const fetchDoctors = async () => {
+            try {
+                const res = await axios.get('/api/doctor');
+                setDoctors(res.data || []);
+            } catch (error) {
+                console.error('Failed to fetch doctors list for contact form:', error);
+            }
+        };
+        fetchDoctors();
+    }, []);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.name || !formData.phone || !formData.message) {
             toast.error('Incomplete form', {
@@ -43,10 +58,30 @@ const Contact = () => {
             });
             return;
         }
-        setSubmitted(true);
-        toast.success('Inquiry Submitted Successfully', {
-            description: 'Our patient care desk will call you back within 15 minutes.',
-        });
+
+        try {
+            const nameParts = formData.name.trim().split(' ');
+            const firstName = nameParts[0] || 'Guest';
+            const lastName = nameParts.slice(1).join(' ') || 'User';
+
+            await axios.post('/api/messages', {
+                firstName,
+                lastName,
+                email: formData.email || 'not-provided@hospital.com',
+                phone: formData.phone,
+                message: `[Subject: ${formData.subject}] [Dept: ${formData.department}] ${formData.message}`,
+                relatedDoctor: formData.relatedDoctor || null,
+            });
+
+            setSubmitted(true);
+            toast.success('Inquiry Submitted Successfully', {
+                description: 'Our patient care desk will call you back within 15 minutes.',
+            });
+        } catch (error) {
+            toast.error('Submission Failed', {
+                description: error.response?.data?.message || 'Could not submit inquiry. Please try again.',
+            });
+        }
     };
 
     return (
@@ -246,6 +281,25 @@ const Contact = () => {
                                         <option>Neurology & Spine Care</option>
                                         <option>General Medicine & Health Checkup</option>
                                         <option>Ayushman Bharat / Cashless TPA Desk</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                                        Related To (Doctor / General)
+                                    </label>
+                                    <select
+                                        name="relatedDoctor"
+                                        value={formData.relatedDoctor}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:border-[#00478d] dark:focus:border-blue-500 focus:ring-1 focus:ring-[#00478d] dark:focus:ring-blue-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm"
+                                    >
+                                        <option value="">General Hospital Inquiry</option>
+                                        {doctors.map((doc) => (
+                                            <option key={doc._id} value={doc.user?._id || doc.user || doc._id}>
+                                                {doc.name} ({doc.specialty || 'Doctor'})
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
 

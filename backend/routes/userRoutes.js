@@ -3,6 +3,7 @@ import {
     getUserProfile,
     updateUserProfile,
     registerPatientByAdmin,
+    getPatientsDirectory,
 } from '../controllers/UserController.js';
 import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 
@@ -20,4 +21,9 @@ router.route('/profile/:id')
 //@route   POST /api/user/register-patient
 router.route('/register-patient')
     .post(protect, authorizeRoles('Super Admin', 'Receptionist'), registerPatientByAdmin);
+
+//@route   GET /api/user/patients
+router.route('/patients')
+    .get(protect, authorizeRoles('Super Admin', 'Receptionist', 'Doctor'), getPatientsDirectory);
+
 export default router;

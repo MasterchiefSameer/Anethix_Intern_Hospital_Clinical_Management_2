@@ -214,3 +214,35 @@ export const registerPatientByAdmin = async (req, res, next) => {
         next(error);
     }
 };
+
+// @desc    Get patients directory (RBAC: Super Admin/Receptionist gets all, Doctor gets patients from appointments)
+// @route   GET /api/user/patients
+// @access  Private (Super Admin, Receptionist, Doctor)
+export const getPatientsDirectory = async (req, res, next) => {
+    try {
+        if (req.user.role === 'Super Admin' || req.user.role === 'Receptionist') {
+            const patients = await User.find({ role: 'Patient' }).select('-password').sort({ createdAt: -1 });
+            return res.status(200).json(patients);
+        } else if (req.user.role === 'Doctor') {
+            // Find doctor document
+            const doctorDoc = await Doctor.findOne({
+                $or: [{ user: req.user._id }, { email: req.user.email.toLowerCase() }]
+            });
+
+            const doctorIdFilter = doctorDoc ? [req.user._id, doctorDoc._id] : [req.user._id];
+
+            // Import Appointment dynamically or query via mongoose
+            const Appointment = (await import('../models/Appointment.js')).default;
+            const appointments = await Appointment.find({ doctor: { $in: doctorIdFilter } }).select('patient');
+            const patientIds = [...new Set(appointments.map(a => a.patient.toString()))];
+
+            const patients = await User.find({ _id: { $in: patientIds }, role: 'Patient' }).select('-password').sort({ name: 1 });
+            return res.status(200).json(patients);
+        } else {
+            res.status(403);
+            throw new Error('Not authorized to access patient directory');
+        }
+    } catch (error) {
+        next(error);
+    }
+};

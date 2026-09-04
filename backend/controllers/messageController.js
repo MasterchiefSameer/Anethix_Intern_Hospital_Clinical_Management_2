@@ -9,7 +9,7 @@ import Message from '../models/Message.js';
 // @access  Public
 const createMessage = async (req, res, next) => {
     try {
-        const { firstName, lastName, email, phone, message } = req.body;
+        const { firstName, lastName, email, phone, message, relatedDoctor } = req.body;
 
         if (!firstName || !lastName || !email || !phone || !message) {
             res.status(400);
@@ -21,7 +21,8 @@ const createMessage = async (req, res, next) => {
             lastName,
             email,
             phone,
-            message
+            message,
+            relatedDoctor: relatedDoctor || null
         });
 
         res.status(201).json(newMessage);
@@ -30,12 +31,18 @@ const createMessage = async (req, res, next) => {
     }
 };
 
-// @desc    Get all messages
+// @desc    Get messages based on role (RBAC)
 // @route   GET /api/messages
-// @access  Private/Admin/Receptionist
+// @access  Private/Admin/Receptionist/Doctor
 const getMessages = async (req, res, next) => {
     try {
-        const messages = await Message.find({});
+        let filter = {};
+        if (req.user && req.user.role === 'Doctor') {
+            filter = { relatedDoctor: req.user._id };
+        }
+        const messages = await Message.find(filter)
+            .populate('relatedDoctor', 'firstName lastName email')
+            .sort({ createdAt: -1 });
         res.json(messages);
     } catch (error) {
         next(error);

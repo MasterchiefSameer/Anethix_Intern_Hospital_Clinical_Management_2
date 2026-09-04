@@ -28,6 +28,11 @@ const messageSchema = new mongoose.Schema({
     isRead: {
         type: Boolean,
         default: false,
+    },
+    relatedDoctor: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null,
     }
 }, { timestamps: true });
 
