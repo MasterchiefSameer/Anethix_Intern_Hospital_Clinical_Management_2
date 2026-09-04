@@ -164,3 +164,53 @@ export const updateUserProfile = async (req, res, next) => {
         next(error);
     }
 };
+
+
+//@desc   Register a new Patient (By Receptionist/Admin)
+//@route   POST /api/user/register-patient
+//@access   Private (Receptionist, Super Admin)
+export const registerPatientByAdmin = async (req, res, next) => {
+    try {
+        const {
+            name,
+            email,
+            phone,
+            password } = req.body;
+
+        if (!name || !email || !password) {
+            res.status(400);
+            throw new Error('Please provide name, email and password');
+        }
+
+        // Check first the first exist or not
+        const userExist = await User.findOne({ email });
+        if (userExists) {
+            res.status(400);
+            throw new Error('Patient with this email already exists');
+        }
+
+        const user = await User.create({
+            name,
+            email,
+            password, //Password automatically hash ho jayega (Duw to User model hook)
+            phone: phone || '',
+            role: 'Patient',
+        });
+
+        if (user) {
+            //We don't create Token/Cookie Here, because it will lose the receptionist session
+            res.status(201).json({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                message: "Patient Registered Successfully",
+            });
+        } else {
+            res.status(400);
+            throw new Error('Invalid user data');
+        }
+    } catch (error) {
+        next(error);
+    }
+};

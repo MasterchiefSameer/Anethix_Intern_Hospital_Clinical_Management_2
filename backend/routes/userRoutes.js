@@ -2,8 +2,9 @@ import express from 'express';
 import {
     getUserProfile,
     updateUserProfile,
+    registerPatientByAdmin,
 } from '../controllers/UserController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -16,4 +17,7 @@ router.route('/profile/:id')
     .get(protect, getUserProfile)
     .put(protect, updateUserProfile);
 
+//@route   POST /api/user/register-patient
+router.route('/register-patient')
+    .post(protect, authorizeRoles('Super Admin', 'Receptionist'), registerPatientByAdmin);
 export default router;

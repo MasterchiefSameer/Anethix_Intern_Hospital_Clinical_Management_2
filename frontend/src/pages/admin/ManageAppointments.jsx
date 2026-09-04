@@ -33,6 +33,7 @@ import { useAuth } from '../../context/AuthContext';
 
 const ManageAppointments = () => {
     const { user } = useAuth();
+    const userRole = user?.role || user?.role.rest;
 
     const [queue, setQueue] = useState([]);
     const [stats, setStats] = useState({
@@ -55,6 +56,7 @@ const ManageAppointments = () => {
     const [walkInData, setWalkInData] = useState({
         patientName: '',
         patientPhone: '',
+        patientEmail: '',
         doctor: '',
         time: '10:00 AM',
         reason: 'General Walk-In Consultation',
@@ -140,7 +142,7 @@ const ManageAppointments = () => {
         }
     };
 
-    // Handle Front Desk Walk-In Booking
+        // Handle Front Desk Walk-In Booking & Account Creation
     const handleWalkInSubmit = async (e) => {
         e.preventDefault();
         setSubmittingWalkIn(true);
@@ -151,31 +153,46 @@ const ManageAppointments = () => {
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
             };
 
-            await axios.post(`${import.meta.env.VITE_API_URL}/api/appointments/walkin`,
-                walkInData,
-                config
-            );
+            // 1. Pehle Patient ka account banate hain
+            const registerRes = await axios.post(`${import.meta.env.VITE_API_URL}/api/user/register-patient`, {
+                name: walkInData.patientName,
+                phone: walkInData.patientPhone,
+                email: walkInData.patientEmail,
+                password: walkInData.patientPhone || 'MedTrust@123', // Default password
+            }, config);
 
-            toast.success('Walk-In Registered & Queued!', {
-                description: `Patient ${walkInData.patientName} is added to the live OPD list.`,
+            const newPatientId = registerRes.data._id; // Naye patient ki ID nikal li
+
+            // 2. Ab Walk-in book karte hain us nayi ID ke sath
+            await axios.post(`${import.meta.env.VITE_API_URL}/api/appointments/walkin`, {
+                ...walkInData,
+                patientId: newPatientId // Backend ko bhej rahe hain
+            }, config);
+
+            toast.success('Patient Registered & Queued!', {
+                description: `Account created for ${walkInData.patientName} and added to OPD list.`,
             });
 
+            // Modal band karein
             setWalkInOpen(false);
+            
+            // Form state ko reset karein
             setWalkInData({
                 patientName: '',
                 patientPhone: '',
+                patientEmail: '',
                 doctor: doctorsList[0]?._id || '',
                 time: '10:00 AM',
                 reason: 'General Walk-In Consultation',
-                autoCheckIn: true,
+                autoCheckIn: true
             });
 
-            fetchQueueData();
-        } catch (err) {
-            console.error('Walk-in booking error:', err);
-            toast.error('Walk-In Booking Failed', {
-                description: err.response?.data?.message || 'Please check patient details and try again.',
-            });
+            // Note: Agar aapke purane code mein yahan koi API refresh function call ho raha tha 
+            // (Jaise fetchTodayQueue()), toh use yahan add kar lijiyega.
+
+        } catch (error) {
+            console.error('Walk-in booking error:', error);
+            toast.error(error.response?.data?.message || 'Failed to register and book walk-in patient.');
         } finally {
             setSubmittingWalkIn(false);
         }
@@ -365,14 +382,16 @@ const ManageAppointments = () => {
                     </button>
 
                     {/* Book Walk-In Patient Modal Trigger */}
-                    <button
-                        type="button"
-                        onClick={() => setWalkInOpen(true)}
-                        className="inline-flex items-center gap-2 bg-[#00478d] dark:bg-blue-600 hover:bg-[#003870] dark:hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-xl text-xs shadow-sm transition-all"
-                    >
-                        <UserPlus size={16} />
-                        <span>+ Book Walk-In Patient</span>
-                    </button>
+                    {(userRole === 'Receptionist' || userRole === 'Super Admin') && (
+                        <button
+                            type="button"
+                            onClick={() => setWalkInOpen(true)}
+                            className="inline-flex items-center gap-2 bg-[#00478d] dark:bg-blue-600 hover:bg-[#003870] dark:hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-xl text-xs shadow-sm transition-all"
+                        >
+                            <UserPlus size={16} />
+                            <span>+ Book Walk-In Patient</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -571,6 +590,21 @@ const ManageAppointments = () => {
                                     value={walkInData.patientName}
                                     onChange={(e) => setWalkInData({ ...walkInData, patientName: e.target.value })}
                                     placeholder="e.g. Ramesh Kumar"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-[#00478d]"
+                                />
+                            </div>
+
+                            {/* Email */}
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                                    Email Address * (For Account Login)
+                                </label>
+                                <input
+                                    type="email"
+                                    required
+                                    value={walkInData.patientEmail}
+                                    onChange={(e) => setWalkInData({ ...walkInData, patientEmail: e.target.value })}
+                                    placeholder="patient@email.com"
                                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-[#00478d]"
                                 />
                             </div>

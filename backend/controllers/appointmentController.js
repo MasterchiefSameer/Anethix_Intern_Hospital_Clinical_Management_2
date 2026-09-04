@@ -121,7 +121,15 @@ export const createAppointment = async (req, res, next) => {
 // @access  Private (Receptionist, Super Admin)
 export const bookWalkInAppointment = async (req, res, next) => {
     try {
-        const { patientName, patientPhone, doctor, time, reason, date, autoCheckIn } = req.body;
+        const { 
+            patientName,
+            patientPhone,
+            doctor,
+            time,
+            reason,
+            date,
+            autoCheckIn,
+            patientId } = req.body;
 
         if (!patientName || !doctor || !time) {
             res.status(400);
@@ -171,6 +179,7 @@ export const bookWalkInAppointment = async (req, res, next) => {
         const appointment = new Appointment({
             patient: patientUser ? patientUser._id : req.user._id,
             doctor,
+            patient: patientId,
             date: appointmentDate,
             time,
             reason: reason || 'Walk-in OPD Consultation',
