@@ -222,7 +222,7 @@ const StaffLogin = () => {
                                             required
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
-                                            placeholder="admin@medtrust.org or doctor@medtrust.org"
+                                            placeholder="Admin, Receptionist and Doctor mail"
                                             className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-950/70 border border-slate-700 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors"
                                         />
                                     </div>
@@ -263,11 +263,7 @@ const StaffLogin = () => {
                             </form>
 
                             {/* Demo Credentials Tip for Super Admin */}
-                            <div className="mt-6 p-3 bg-blue-950/40 border border-blue-900/50 rounded-xl text-[11px] text-blue-200">
-                                <span className="font-bold text-blue-300">Initial Super Admin Credentials:</span><br />
-                                <span>Email: <code className="bg-slate-950 px-1 py-0.5 rounded text-blue-400">admin@medtrust.org</code></span> |
-                                <span> Pass: <code className="bg-slate-950 px-1 py-0.5 rounded text-blue-400">Admin@12345</code></span>
-                            </div>
+                            
                         </>
                     ) : (
                         /* VIEW 2: Forced First-Time Password Change */
